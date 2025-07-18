@@ -2,116 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName="NewShogiPieceInfo", menuName="Shogi/PieceInfo")]
-    public class ShogiPieceInfo : ScriptableObject
-    {
-        public PieceType pieceType;
-        public Sprite pieceSprite;
-
-        // 이동 규칙 예시: 상대적 이동 벡터들
-        public List<Vector2Int> moveDirections;
-    }
-
 public enum PieceType
-    { Wang, Chang, Sang, Ja, Hoo }
+{
+    Wang, Chang, Sang, Ja, Hoo, Empty
+}
 public class Piece
 {
     public PieceType pieceType;
     public int stayedTurns;
     public int owner;
-    public ShogiPieceInfo pieceInfo;
-}
-public class Cell
-{
-    public int x;
-    public int y;
-    public Piece piece;
 }
 
-public class ShogiBoard
-{
-    public int width;
-    public int height;
-    public Cell[,] cells;
-    public void InitializeBoard(List<ShogiPieceInfo> pieceInfos)
-    {
-        width = 3;
-        height = 4;
-        cells = new Cell[width, height];
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                cells[x, y] = new Cell();
-                cells[x, y].x = x;
-                cells[x, y].y = y;
-                cells[x, y].piece = null;
-            }
-        }
-        // Initialize cells
-        {
-            // Player 0
-            cells[0, 0].piece = new Piece
-            {
-                pieceType = PieceType.Sang,
-                stayedTurns = 0,
-                owner = 0,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Sang)
-            };
-            cells[1, 0].piece = new Piece
-            {
-                pieceType = PieceType.Wang,
-                stayedTurns = 0,
-                owner = 0,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Wang)
-            };
-            cells[2, 0].piece = new Piece
-            {
-                pieceType = PieceType.Chang,
-                stayedTurns = 0,
-                owner = 0,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Chang)
-            };
-            cells[1, 1].piece = new Piece
-            {
-                pieceType = PieceType.Ja,
-                stayedTurns = 0,
-                owner = 0,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Ja)
-            };
-            // Player 1
-            cells[2, 3].piece = new Piece
-            {
-                pieceType = PieceType.Sang,
-                stayedTurns = 0,
-                owner = 1,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Sang)
-            };
-            cells[1, 3].piece = new Piece
-            {
-                pieceType = PieceType.Wang,
-                stayedTurns = 0,
-                owner = 1,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Wang)
-            };
-            cells[0, 3].piece = new Piece
-            {
-                pieceType = PieceType.Chang,
-                stayedTurns = 0,
-                owner = 1,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Chang)
-            };
-            cells[1, 2].piece = new Piece
-            {
-                pieceType = PieceType.Ja,
-                stayedTurns = 0,
-                owner = 1,
-                pieceInfo = pieceInfos.Find(p => p.pieceType == PieceType.Ja)
-            };
-        }
-        
-    }
-}
 public class ShogiPlayer
 {
     public int userId;
@@ -128,8 +29,8 @@ public class SessionInfo
 }
 public class ShogiModel : MonoBehaviour
 {
-    public ShogiBoard board;
-    public int turn;
+    public Piece[,] board;
+    public int turn;    // 지금 누구 턴인가? 1 or 2
     private int playerId;
     public SessionInfo session;
 
@@ -141,6 +42,45 @@ public class ShogiModel : MonoBehaviour
     public int GetPlayerId()
     {
         return playerId;
+    }
+
+    public void InitializeBoard()
+    {
+        int width = 3;
+        int height = 4;
+        board = new Piece[width, height];
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                board[x, y] = new Piece
+                {
+                    pieceType = PieceType.Empty,
+                    owner = 0,
+                    stayedTurns = 0
+                };
+            }
+        }
+        {
+            board[0, 0].pieceType = PieceType.Sang;
+            board[0, 0].owner = 1;
+            board[1, 0].pieceType = PieceType.Wang;
+            board[1, 0].owner = 1;
+            board[2, 0].pieceType = PieceType.Chang;
+            board[2, 0].owner = 1;
+            board[1, 1].pieceType = PieceType.Ja;
+            board[1, 1].owner = 1;
+
+            board[2, 3].pieceType = PieceType.Sang;
+            board[2, 3].owner = 2;
+            board[1, 3].pieceType = PieceType.Wang;
+            board[1, 3].owner = 2;
+            board[0, 3].pieceType = PieceType.Chang;
+            board[0, 3].owner = 2;
+            board[1, 2].pieceType = PieceType.Ja;
+            board[1, 2].owner = 2;
+        }
+
     }
     // Start is called before the first frame update
     void Start()

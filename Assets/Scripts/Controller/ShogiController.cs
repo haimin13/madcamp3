@@ -2,58 +2,45 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using Newtonsoft.Json;
 
-[System.Serializable]
-public class MoveRequest
+public class AvailableMovesResponse
 {
-    public int session_id;
-    public int player_id;
-    public string piece;
-    public Position position;
-
-    [System.Serializable]
-    public class Position
-    {
-        public PositionDetail from;
-        public PositionDetail to; // 이동 전용. -> null일 수도 있음
-    }
-
-    [System.Serializable]
-    public class PositionDetail
-    {
-        public int x;
-        public int y;
-    }
+    public bool result;
+    public List<List<int>> moves;
 }
-
 public class ShogiController : MonoBehaviour
 {
-    public ShogiModel model;                 // 인스펙터에서 연결 or Find로 획득
-    public List<ShogiPieceInfo> pieceInfos;  // Inspector에 에셋 리스트로 연결
+    public ShogiModel model;                 // 인스펙터에서 연결 or Find로 획득  // Inspector에 에셋 리스트로 연결
     public ShogiView view;                   // 뷰를 연결 (또는 코드로 할당)
     public int playerId;
 
     public void OnCellSelected(int x, int y)
     {
-        string piece = null;
-        if (model.board.cells[x, y].piece != null)
+        Debug.Log($"cell clicked and controller acknowledged! x: {x}, y: {y}");
+        var req = new Dictionary<string, object>();
+        req["session_id"] = model.session.sessionId;
+        req["player_id"] = model.GetPlayerId();
+        req["piece"] = model.board[x, y].pieceType.ToString();
+        req["position"] = new Dictionary<string, object>
         {
-            piece = model.board.cells[x, y].piece.pieceType.ToString();
-        }
-        var req = new MoveRequest
-        {
-            session_id = model.session.sessionId,
-            player_id = model.GetPlayerId(),
-            piece = piece,
-            position = {
-                from = {
-                    x = x,
-                    y = y
-                },
-                to = null
-            }
+            {"from", new List<int> {x, y}},
+            {"to", null}
         };
-        
+
+        string json = JsonConvert.SerializeObject(req);
+
+        if (APIRequester.Instance != null)
+        {
+            StartCoroutine(APIRequester.Instance.PostJson("/shogi/available-moves", json, (response) =>
+            {
+                var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
+                if (res.result)
+                {
+                    view.HighlightMovableCells(res.moves);
+                }
+            }));
+        }
     }
 
     public SessionInfo GetSession()
@@ -68,16 +55,14 @@ public class ShogiController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // SetPlayerId(userId);
-        model.SetPlayerId(0);   // serverless test용
+        // model.SetPlayerId(userId);
+        model.SetPlayerId(2);   // serverless test용
         playerId = model.GetPlayerId();
 
         model.session = GetSession();
+        model.InitializeBoard();
 
-        model.board = new ShogiBoard();
-        model.board.InitializeBoard(pieceInfos);
-
-        view.ShowBoard(model.board, playerId);
+        view.ShowBoard();
     }
 
     // Update is called once per frame

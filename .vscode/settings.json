@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "GeniusMinigame.sln"
+    "dotnet.defaultSolution": "My project (3).sln"
 }

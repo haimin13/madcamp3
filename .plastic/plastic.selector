@@ -1,0 +1,4 @@
+repository "GeniusMinigame/GeniusMinigame@14569664091804@cloud"
+  path "/"
+    br "/main"
+    co "/main"

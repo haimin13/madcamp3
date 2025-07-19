@@ -17,22 +17,21 @@ public class ShogiPlayer
 {
     public int userId;
     public string userName;
-    public int playerId;
     public List<Piece> capturedPieces;
 }
 
-public class SessionInfo
-{
-    public int sessionId;
-    public int userId1;
-    public int userId2;
-}
 public class ShogiModel : MonoBehaviour
 {
     public Piece[,] board;
     public int turn;    // 지금 누구 턴인가? 1 or 2
     private int playerId;
-    public SessionInfo session;
+    private int AdversaryId;
+    public Dictionary<int, ShogiPlayer> playersInfo;
+    private GameDataModel gameDataModel;
+    private int sessionId;
+    public List<int>selectedPosition;
+    public List<List<int>> movablePositions = null;
+
 
     public void SetPlayerId(int value)
     {
@@ -82,10 +81,35 @@ public class ShogiModel : MonoBehaviour
         }
 
     }
+    public int GetSessionId() {
+        return sessionId;
+    }
+    public void SetSessionId(int num) {
+        sessionId = num;
+    }
+    public void InitializePlayers()
+    {
+        for (int i = 1; i < 3; i++)
+        {
+            playersInfo[i] = new ShogiPlayer
+            {
+                userId = i,
+                userName = $"player{i}",
+                capturedPieces = new List<Piece>{}
+            };
+        }
+    }
     // Start is called before the first frame update
     void Start()
     {
-
+        if (GameDataModel.Instance != null)
+        {
+            gameDataModel = GameDataModel.Instance;
+        }
+        else
+        {
+            Debug.Log("No GameDataModel Object");
+        }
     }
 
     // Update is called once per frame

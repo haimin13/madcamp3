@@ -29,7 +29,7 @@ public class ShogiView : MonoBehaviour
         int width = model.board.GetLength(0);
         int height = model.board.GetLength(1);
         int playerId = model.GetPlayerId();  // 1 or 2
-        float cellSize = 1f;
+        float cellSize = 2f;
 
         Vector3 boardOrigin = new Vector3(-(width - 1) / 2f * cellSize, -(height - 1) / 2f * cellSize, 0);
 
@@ -53,11 +53,23 @@ public class ShogiView : MonoBehaviour
                     drawX = width - 1 - x;
                     drawY = height - 1 - y;
                 }
-                Vector3 pos = boardOrigin + new Vector3(drawX * cellSize, drawY * cellSize, 0);
+                float gap = 0.1f;
+                Vector3 pos = boardOrigin + new Vector3(drawX * (cellSize - gap), drawY * (cellSize - gap), 0);
 
                 var cellObj = Instantiate(cellPrefab, pos, Quaternion.identity, boardRoot);
                 var cellView = cellObj.GetComponent<CellView>();
                 cellView.Init(x, y, drawX, drawY, this);
+
+                var cellSr = cellObj.GetComponent<SpriteRenderer>();
+                if (cellSr != null)
+                {
+                    if (drawY == 0)
+                        cellSr.color = new Color(0f, 1f, 0f, 0.5f); // 초록색 + 50% 투명도
+                    else if (drawY == height - 1)
+                        cellSr.color = new Color(1f, 0f, 0f, 0.5f); // 빨강색 + 50% 투명도
+                    else
+                        cellSr.color = new Color(1f, 1f, 1f, 1f); // 기본 흰색, 불투명   // 나머진 흰색(혹은 원래 색)
+                }
 
                 // --- Piece 있으면 피스 만들어 띄우기 ---
                 Piece piece = model.board[x, y];
@@ -74,6 +86,12 @@ public class ShogiView : MonoBehaviour
                 }
             }
         }
+        foreach (Transform child in boardRoot)
+        {
+            var cell = child.GetComponent<CellView>();
+            if (cell != null)
+                cell.Highlight(false);
+        }
     }
 
     public void HighlightMovableCells(List<List<int>> moves)
@@ -81,6 +99,8 @@ public class ShogiView : MonoBehaviour
         int width = model.board.GetLength(0);
         int height = model.board.GetLength(1);
         int playerId = model.GetPlayerId();
+
+        Debug.Log(moves[0][0].ToString() + ',' + moves[0][1].ToString());
 
         // 모든 셀 하이라이트 끄기
         foreach (Transform child in boardRoot)

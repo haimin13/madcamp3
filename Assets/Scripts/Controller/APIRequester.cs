@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 public class APIRequester : MonoBehaviour
 {
     public static APIRequester Instance { get; private set; }
-    public string baseUrl;
+    public string baseUrl = GameDataModel.Instance.baseUrl;
 
     void Awake()
     {

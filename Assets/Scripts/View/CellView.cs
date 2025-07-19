@@ -21,9 +21,15 @@ public class CellView : MonoBehaviour
     }
 
     public void Highlight(bool on)
-    {
+    {   
+        Debug.Log($"{x},{y} Highlight set to {on}. renderer={highlightRenderer}");
         if (highlightRenderer != null)
-            highlightRenderer.enabled = on; // 예: 컬러 등 효과
+        {
+            highlightRenderer.enabled = on;
+        }
+
+        else
+            Debug.LogWarning("highlightRenderer is null!!");
     }
     void OnMouseUpAsButton()
     {

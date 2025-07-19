@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 using UnityEngine;
 
 public class ShogiView : MonoBehaviour
@@ -9,6 +10,10 @@ public class ShogiView : MonoBehaviour
     public Transform boardRoot;          // 보드 전체의 부모 오브젝트
     public ShogiModel model;
     public ShogiController controller;
+    public RectTransform myCapturedPanel;
+    public RectTransform opponentCapturedPanel;
+    public GameObject capturedPieceIconPrefab;
+
     public Sprite wangSprite, changSprite, sangSprite, jaSprite, hooSprite; // 기물별 스프라이트
 
     Sprite GetSprite(PieceType type)
@@ -86,6 +91,12 @@ public class ShogiView : MonoBehaviour
                 }
             }
         }
+        RemoveHighlights();
+        SetupCapturedPanels();
+        ShowCapturedPieces();
+    }
+    public void RemoveHighlights()
+    {
         foreach (Transform child in boardRoot)
         {
             var cell = child.GetComponent<CellView>();
@@ -100,15 +111,21 @@ public class ShogiView : MonoBehaviour
         int height = model.board.GetLength(1);
         int playerId = model.GetPlayerId();
 
-        Debug.Log(moves[0][0].ToString() + ',' + moves[0][1].ToString());
+        if (moves == null)
+        {
+            Debug.Log("null passed in moves");
+        }
+        else if (moves.Count == 0)
+        {
+            Debug.Log("moves is empty");
+        }
+        else
+        {
+            Debug.Log(moves[0][0].ToString() + ',' + moves[0][1].ToString());
+        }
 
         // 모든 셀 하이라이트 끄기
-        foreach (Transform child in boardRoot)
-        {
-            var cell = child.GetComponent<CellView>();
-            if (cell != null)
-                cell.Highlight(false);
-        }
+        RemoveHighlights();
 
         // 이동 가능 좌표 하이라이트 켜기
         foreach (var pos in moves)
@@ -129,14 +146,92 @@ public class ShogiView : MonoBehaviour
             }
         }
     }
+    
+    void ShowCapturedPieces()
+    {
+        int playerId = model.GetPlayerId();
+        int adversaryId = playerId == 1 ? 2 : 1;
+
+        // 패널 초기화: 자식 모두 삭제
+        foreach (Transform t in myCapturedPanel) Destroy(t.gameObject);
+        foreach (Transform t in opponentCapturedPanel) Destroy(t.gameObject);
+
+        // 그리드 설정
+        int MAX_COUNT = 6;
+        int COLS = 3;   // 가로 칸수
+        int ROWS = 2;   // 세로 칸수
+
+        void DrawPieces(List<Piece> capturedPieces, RectTransform panel)
+        {
+            int count = Mathf.Min(MAX_COUNT, capturedPieces.Count);
+            Vector2 panelSize = panel.rect.size;
+
+            float cellWidth = panelSize.x / COLS;
+            float cellHeight = panelSize.y / ROWS;
+
+            for (int i = 0; i < count; i++)
+            {
+                Piece piece = capturedPieces[i];
+                if (piece == null) continue;
+
+                int col = i % COLS;
+                int row = i / COLS;
+
+                var obj = Instantiate(capturedPieceIconPrefab, panel);
+                var rt = obj.GetComponent<RectTransform>();
+
+                // 왼쪽 위(0,0) 기준이므로 y는 반전!
+                float x = col * cellWidth + cellWidth / 2f;
+                float y = -row * cellHeight - cellHeight / 2f + panelSize.y / 2f;
+                rt.anchoredPosition = new Vector2(x, y);
+
+                var img = obj.GetComponent<Image>();
+                Sprite pieceSprite = GetSprite(piece.pieceType);
+                if (img != null) img.sprite = pieceSprite;
+
+                var btn = obj.GetComponent<Button>();
+                if (btn == null)
+                    btn = obj.AddComponent<Button>();
+
+                var capturedPiece = piece; // 클로저 이슈 방지
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() => {
+                    OnCapturedPieceClicked(capturedPiece);
+                });
+            }
+        }
+
+        DrawPieces(model.playersInfo[playerId].capturedPieces, myCapturedPanel);
+        DrawPieces(model.playersInfo[adversaryId].capturedPieces, opponentCapturedPanel);
+    }
+
+
+    void SetupCapturedPanels()
+    {
+        int playerId = model.GetPlayerId();
+
+        if(playerId == 1)
+        {
+            // 내 패널 = 오른쪽 아래, 상대 패널 = 왼쪽 위로 이동
+            myCapturedPanel.anchorMin = new Vector2(1, 0); myCapturedPanel.anchorMax = new Vector2(1, 0);
+            opponentCapturedPanel.anchorMin = new Vector2(0, 1); opponentCapturedPanel.anchorMax = new Vector2(0, 1);
+        }
+        else
+        {
+            // 내 패널 = 오른쪽 아래, 상대 패널 = 왼쪽 위 (2P도 동일, 논리적으로 필요시 패널 위치 스왑 가능)
+            myCapturedPanel.anchorMin = new Vector2(1, 0); myCapturedPanel.anchorMax = new Vector2(1, 0);
+            opponentCapturedPanel.anchorMin = new Vector2(0, 1); opponentCapturedPanel.anchorMax = new Vector2(0, 1);
+        }
+    }
+
 
     public Vector2Int ModelToPlayerCoords(int playerId, int x, int y, int width, int height)
-{
-    if (playerId == 1)
-        return new Vector2Int(x, y); // 그대로
-    else // playerId == 2
-        return new Vector2Int(width - 1 - x, height - 1 - y); // 180도 반전
-}
+    {
+        if (playerId == 1)
+            return new Vector2Int(x, y); // 그대로
+        else // playerId == 2
+            return new Vector2Int(width - 1 - x, height - 1 - y); // 180도 반전
+    }
     public void OnCellClicked(int x, int y)
     {
         Debug.Log("cell clicked and ShogiView acknowledged");
@@ -145,6 +240,12 @@ public class ShogiView : MonoBehaviour
         controller.OnCellSelected(x, y);
     }
 
+    public void OnCapturedPieceClicked(Piece piece)
+    {
+        RemoveHighlights();
+        // Controller로 이벤트 위임
+        controller.OnCapturedPieceClicked(piece);
+    }
 
     // Start is called before the first frame update
     void Start()

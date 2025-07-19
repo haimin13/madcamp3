@@ -4,18 +4,18 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 
+
 public class APIRequester : MonoBehaviour
 {
     public static APIRequester Instance { get; private set; }
-    public string baseUrl = GameDataModel.Instance.baseUrl;
-
+    public string baseUrl;
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            baseUrl = "";
+            baseUrl = GameDataModel.Instance.baseUrl;
         }
         else
         {
@@ -25,7 +25,7 @@ public class APIRequester : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame

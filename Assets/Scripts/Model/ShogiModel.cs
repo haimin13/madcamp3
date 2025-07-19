@@ -26,10 +26,11 @@ public class ShogiModel : MonoBehaviour
     public int turn;    // 지금 누구 턴인가? 1 or 2
     private int playerId;
     private int AdversaryId;
-    public Dictionary<int, ShogiPlayer> playersInfo;
+    public Dictionary<int, ShogiPlayer> playersInfo = new Dictionary<int, ShogiPlayer>();
     private GameDataModel gameDataModel;
     private int sessionId;
     public List<int>selectedPosition;
+    public Piece selectedCapturedPiece;
     public List<List<int>> movablePositions = null;
 
 
@@ -49,17 +50,9 @@ public class ShogiModel : MonoBehaviour
         int height = 4;
         board = new Piece[width, height];
         for (int x = 0; x < width; x++)
-        {
             for (int y = 0; y < height; y++)
-            {
-                board[x, y] = new Piece
-                {
-                    pieceType = PieceType.Empty,
-                    owner = 0,
-                    stayedTurns = 0
-                };
-            }
-        }
+                board[x, y] = CreateEmptyPiece();
+
         {
             board[0, 0].pieceType = PieceType.Sang;
             board[0, 0].owner = 1;
@@ -95,21 +88,68 @@ public class ShogiModel : MonoBehaviour
             {
                 userId = i,
                 userName = $"player{i}",
-                capturedPieces = new List<Piece>{}
+                capturedPieces = new List<Piece> { }
             };
+            //for TEST
+            {
+                playersInfo[i].capturedPieces.Add(new Piece
+                {
+                    pieceType = PieceType.Chang,
+                    owner = i,
+                    stayedTurns = 0
+                });
+                playersInfo[i].capturedPieces.Add(new Piece
+                {
+                    pieceType = PieceType.Chang,
+                    owner = i,
+                    stayedTurns = 0
+                });
+                playersInfo[i].capturedPieces.Add(new Piece
+                {
+                    pieceType = PieceType.Chang,
+                    owner = i,
+                    stayedTurns = 0
+                });
+                playersInfo[i].capturedPieces.Add(new Piece
+                {
+                    pieceType = PieceType.Chang,
+                    owner = i,
+                    stayedTurns = 0
+                });
+                playersInfo[i].capturedPieces.Add(new Piece
+                {
+                    pieceType = PieceType.Chang,
+                    owner = i,
+                    stayedTurns = 0
+                });
+                playersInfo[i].capturedPieces.Add(new Piece
+                {
+                    pieceType = PieceType.Chang,
+                    owner = i,
+                    stayedTurns = 0
+                });
+
+            }
         }
+    }
+
+    public Piece CreateEmptyPiece()
+    {
+        var piece = new Piece
+        {
+            pieceType = PieceType.Empty,
+            owner = 0,
+            stayedTurns = 0
+        };
+        return piece;
     }
     // Start is called before the first frame update
     void Start()
     {
         if (GameDataModel.Instance != null)
-        {
             gameDataModel = GameDataModel.Instance;
-        }
         else
-        {
             Debug.Log("No GameDataModel Object");
-        }
     }
 
     // Update is called once per frame

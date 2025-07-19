@@ -36,24 +36,30 @@ public class ShogiController : MonoBehaviour
 
             if (isMovable)
             {
-                RequestMoveTo(x, y); // 이동 요청(서버로 보내기 등)
-                view.HighlightMovableCells(new List<List<int>>()); // 하이라이트 끄기
+                if (model.selectedCapturedPiece == null)
+                    RequestMoveTo(x, y); // 이동 요청(서버로 보내기 등)
+                else
+                    RequestDropTo(x, y);
+                return;
             }
             else
             {
-                // 이동불가 칸 클릭: 하이라이트 및 좌표 초기화
+                model.selectedCapturedPiece = null;
+                model.selectedPosition = null;
                 model.movablePositions = null;
-                view.HighlightMovableCells(new List<List<int>>());
             }
-            return;
+            view.RemoveHighlights();
+        
         }
-        else
+        // 새로운 셀 클릭
+        if (model.board[x, y].pieceType != PieceType.Empty)
         {
-            // 평상시 셀 클릭 처리 (이동 후보 요청)
             model.selectedPosition = new List<int> { x, y };
+            model.selectedCapturedPiece = null;
             RequestAvailableMoves(x, y);
         }
     }
+
     public void RequestAvailableMoves(int x, int y)
     {
         var req = new Dictionary<string, object>();
@@ -86,6 +92,7 @@ public class ShogiController : MonoBehaviour
                         new() {2,2},
                         new() {0,0}
                     };
+                model.movablePositions = moves;
                 view.HighlightMovableCells(moves);
             }));
         }
@@ -131,12 +138,98 @@ public class ShogiController : MonoBehaviour
                         model.playersInfo[model.GetPlayerId()].capturedPieces.Add(piece);
                     }
                     model.board[x, y] = model.board[fromX, fromY];
-                    model.board[fromX, fromY] = new Piece
-                    { pieceType = PieceType.Empty, owner = 0, stayedTurns = 0 };
+                    model.board[fromX, fromY] = model.CreateEmptyPiece();
+
+                    // 다 끝나고
+                    model.selectedPosition = null;
+                    model.movablePositions = null;
+                    model.selectedCapturedPiece = null;
                 }
             }));
         }
-        
+    }
+    public void RequestDropTo(int x, int y)
+    {
+        var req = new Dictionary<string, object>();
+        req["session_id"] = model.GetSessionId();
+        req["player_id"] = model.GetPlayerId();
+        req["piece"] = model.selectedCapturedPiece.pieceType.ToString();
+        req["position"] = new Dictionary<string, object>
+        {
+            {"from", null},
+            {"to", new List<int> {x, y}}
+        };
+        string json = JsonConvert.SerializeObject(req);
+
+        if (APIRequester.Instance != null)
+        {
+            StartCoroutine(APIRequester.Instance.PostJson("/shogi/drop", json, (response) =>
+            {
+                var res = JsonConvert.DeserializeObject<MoveResponse>(response);
+                if (res.result)
+                {
+                    model.board[x, y] = model.selectedCapturedPiece;
+                    // 다 끝나고
+                    model.selectedPosition = null;
+                    model.movablePositions = null;
+                    model.selectedCapturedPiece = null;
+                }
+            }));
+        }
+
+    }
+    public void OnCapturedPieceClicked(Piece piece)
+    {
+        if (model.selectedCapturedPiece != null && model.selectedCapturedPiece == piece)
+        {
+            model.selectedCapturedPiece = null;
+            model.movablePositions = null;
+            return;
+        }
+        else
+        {
+            model.selectedCapturedPiece = piece;
+            RequestAvailableDrop();
+        }
+    }
+
+    public void RequestAvailableDrop()
+    {
+        var req = new Dictionary<string, object>();
+        req["session_id"] = model.GetSessionId();
+        req["player_id"] = model.GetPlayerId();
+        req["piece"] = model.selectedCapturedPiece.pieceType.ToString();
+        req["position"] = new Dictionary<string, object>
+        {
+            {"from", null},
+            {"to", null}
+        };
+
+        string json = JsonConvert.SerializeObject(req);
+
+        if (APIRequester.Instance != null)
+        {
+            StartCoroutine(APIRequester.Instance.PostJson("/shogi/available-drop", json, (response) =>
+            {
+                var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
+                if (res.result)
+                {
+                    model.movablePositions = res.moves;
+                    view.HighlightMovableCells(res.moves);
+                }
+            }, (response) =>
+            {   // JUST FOR TEST
+                var moves = new List<List<int>>
+                    {
+                        new() {0,1},
+                        new() {2,1},
+                        new() {0,2},
+                        new() {2,2}
+                    };
+                model.movablePositions = moves;
+                view.HighlightMovableCells(moves);
+            }));
+        }
     }
 
     // Start is called before the first frame update
@@ -146,9 +239,9 @@ public class ShogiController : MonoBehaviour
         model.SetPlayerId(1);   // serverless test용
 
         model.SetSessionId(GameDataModel.Instance.sessionId);
-        
-        model.InitializeBoard();
+
         model.InitializePlayers();
+        model.InitializeBoard();
 
         view.ShowBoard();
     }

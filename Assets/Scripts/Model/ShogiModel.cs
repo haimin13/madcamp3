@@ -25,11 +25,14 @@ public class ShogiModel : MonoBehaviour
     public Piece[,] board;
     public int turn;    // 지금 누구 턴인가? 1 or 2
     private int playerId;
-    private int AdversaryId;
+    private int adversaryId;
     public Dictionary<int, ShogiPlayer> playersInfo = new Dictionary<int, ShogiPlayer>();
     private GameDataModel gameDataModel;
     private int sessionId;
-    public List<int>selectedPosition;
+    public bool myTurn = false;
+    public int timeLimit = 90;
+    public int timeLeft;
+    public List<int> selectedPosition;
     public Piece selectedCapturedPiece;
     public List<List<int>> movablePositions = null;
 
@@ -43,7 +46,14 @@ public class ShogiModel : MonoBehaviour
     {
         return playerId;
     }
-
+    public void SetAdversaryId(int value)
+    {
+        adversaryId = value;
+    }
+    public int GetAdversaryId()
+    {
+        return adversaryId;
+    }
     public void InitializeBoard()
     {
         int width = 3;
@@ -131,6 +141,7 @@ public class ShogiModel : MonoBehaviour
 
             }
         }
+
     }
 
     public Piece CreateEmptyPiece()

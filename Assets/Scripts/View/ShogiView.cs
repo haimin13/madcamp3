@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using TMPro;
 
 public class ShogiView : MonoBehaviour
 {
@@ -13,6 +14,9 @@ public class ShogiView : MonoBehaviour
     public RectTransform myCapturedPanel;
     public RectTransform opponentCapturedPanel;
     public GameObject capturedPieceIconPrefab;
+    public GameObject myTurnPanel;    // 내 턴일 때 표시할 패널
+    public GameObject opTurnPanel;    // 상대 턴일 때 표시할 패널
+    public TextMeshProUGUI timeText;
 
     public Sprite wangSprite, changSprite, sangSprite, jaSprite, hooSprite; // 기물별 스프라이트
 
@@ -29,6 +33,15 @@ public class ShogiView : MonoBehaviour
         }
     }
 
+    public void UpdateTimer(int secondsLeft)
+    {
+        timeText.text = secondsLeft.ToString(); // 시간 텍스트 표시
+    }
+    public void DisplayTurn()
+    {
+        myTurnPanel.SetActive(model.myTurn);      // 내 턴이면 내 턴 패널 활성화
+        opTurnPanel.SetActive(!model.myTurn);     // 내 턴이 아니면 상대 턴 패널 활성화
+    }
     public void ShowBoard()
     {
         int width = model.board.GetLength(0);

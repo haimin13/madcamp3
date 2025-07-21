@@ -10,8 +10,12 @@ public class GameDataModel : MonoBehaviour
     // 사용자 데이터
     public int userId;
     public string userName;
+    public string currentRoomName;
+    public string currentRoomPassword;
     public int sessionId;
-    public string baseUrl = "";
+    public string selectedGame; // gameselectionscene에서 게임 누르면 설정
+    public int playerId;
+    public string baseUrl;
 
     void Awake()
     {
@@ -23,7 +27,11 @@ public class GameDataModel : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(this.gameObject); // 씬 전환 시 파괴되지 않게 함
+        baseUrl = "http://13.60.30.23:5000/Shogi";
     }
 
     // 필요하다면 Start/Update 사용하세요!
+    void Start()
+    {
+    }
 }

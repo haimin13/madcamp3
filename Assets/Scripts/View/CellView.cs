@@ -1,16 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class CellView : MonoBehaviour
+public class CellView : MonoBehaviour, IPointerClickHandler
 {
-    public int x;
-    public int y;
-    public int drawX;   // 디버깅용
-    public int drawY;   // 디버깅용
+    public int x, y, drawX, drawY;
     public ShogiView view;
-    public SpriteRenderer highlightRenderer; // 미리 분리된 오브젝트 등에 할당
+    public Image cellImage;
+    private Color originalColor;
 
+    // 셀 초기화 시, 원래 색을 저장
     public void Init(int x, int y, int drawX, int drawY, ShogiView view)
     {
         this.x = x;
@@ -18,34 +17,28 @@ public class CellView : MonoBehaviour
         this.drawX = drawX;
         this.drawY = drawY;
         this.view = view;
+
+        if (cellImage == null)
+            cellImage = GetComponent<Image>();
+
+        if (cellImage != null)
+            originalColor = cellImage.color; // 초기 색 저장!
     }
 
+    // 하이라이트 토글
     public void Highlight(bool on)
-    {   
-        Debug.Log($"{x},{y} Highlight set to {on}. renderer={highlightRenderer}");
-        if (highlightRenderer != null)
-        {
-            highlightRenderer.enabled = on;
-        }
+    {
+        if (cellImage == null) return;
 
+        if (on)
+            cellImage.color = new Color(0f, 0.5f, 1f, 0.5f); // 원하는 하이라이트 색상
         else
-            Debug.LogWarning("highlightRenderer is null!!");
-    }
-    void OnMouseUpAsButton()
-    {
-        Debug.Log("cell clicked!");
-        // 클릭 시 항상 모델 좌표로 전달!
-        view.OnCellClicked(x, y);
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
+            cellImage.color = originalColor; // 원래 색상으로 복구
     }
 
-    // Update is called once per frame
-    void Update()
+    public void OnPointerClick(PointerEventData eventData)
     {
-        
+        if (view != null)
+            view.OnCellClicked(x, y);
     }
 }

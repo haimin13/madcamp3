@@ -46,12 +46,12 @@ public class ShogiView : MonoBehaviour
     {
         int width = model.board.GetLength(0);
         int height = model.board.GetLength(1);
-        int playerId = model.GetPlayerId();  // 1 or 2
-        float cellSize = 2f;
+        int playerId = model.GetPlayerId();
+        float cellSize = 140f; // 픽셀 단위, 패널 크기에 맞게 설정!
 
-        Vector3 boardOrigin = new Vector3(-(width - 1) / 2f * cellSize, -(height - 1) / 2f * cellSize, 0);
+        Vector2 boardOrigin = new Vector2(-(width - 1) / 2f * cellSize, -(height - 1) / 2f * cellSize);
 
-        // 기존 오브젝트 모두 삭제 (새로 그릴 때)
+        // 기존 자식 모두 삭제
         foreach (Transform child in boardRoot)
             Destroy(child.gameObject);
 
@@ -59,48 +59,48 @@ public class ShogiView : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                // --- 화면 좌표 변환 (player 기준 보드 회전) ---
+                // 시점 변환
                 int drawX, drawY;
-                if (playerId == 1) // 내 시점 그리기
-                {
-                    drawX = x;
-                    drawY = y;
-                }
-                else // playerId == 2, 180도 회전된 보드
-                {
-                    drawX = width - 1 - x;
-                    drawY = height - 1 - y;
-                }
-                float gap = 0.1f;
-                Vector3 pos = boardOrigin + new Vector3(drawX * (cellSize - gap), drawY * (cellSize - gap), 0);
+                if (playerId == 1) { drawX = x; drawY = y; }
+                else { drawX = width - 1 - x; drawY = height - 1 - y; }
 
-                var cellObj = Instantiate(cellPrefab, pos, Quaternion.identity, boardRoot);
+                Vector2 pos = boardOrigin + new Vector2(drawX * cellSize, drawY * cellSize);
+
+                // 셀 생성 (Image 기반)
+                var cellObj = Instantiate(cellPrefab, boardRoot);
+                var rt = cellObj.GetComponent<RectTransform>();
+                rt.sizeDelta = new Vector2(cellSize, cellSize);
+                rt.anchoredPosition = pos;
+
+                var cellImg = cellObj.GetComponent<Image>();
+                // 배경색 지정 (초록/빨강/흰)
+                if (drawY == 0)
+                    cellImg.color = new Color(0f, 1f, 0f, 0.5f);
+                else if (drawY == height - 1)
+                    cellImg.color = new Color(1f, 0f, 0f, 0.5f);
+                else
+                    cellImg.color = Color.white;
+
                 var cellView = cellObj.GetComponent<CellView>();
-                cellView.Init(x, y, drawX, drawY, this);
+                if (cellView != null)
+                    cellView.Init(x, y, drawX, drawY, this);
 
-                var cellSr = cellObj.GetComponent<SpriteRenderer>();
-                if (cellSr != null)
-                {
-                    if (drawY == 0)
-                        cellSr.color = new Color(0f, 1f, 0f, 0.5f); // 초록색 + 50% 투명도
-                    else if (drawY == height - 1)
-                        cellSr.color = new Color(1f, 0f, 0f, 0.5f); // 빨강색 + 50% 투명도
-                    else
-                        cellSr.color = new Color(1f, 1f, 1f, 1f); // 기본 흰색, 불투명   // 나머진 흰색(혹은 원래 색)
-                }
-
-                // --- Piece 있으면 피스 만들어 띄우기 ---
+                // Piece 있으면
                 Piece piece = model.board[x, y];
                 if (piece.pieceType != PieceType.Empty)
                 {
-                    var pieceObj = Instantiate(piecePrefab, pos, Quaternion.identity, boardRoot);
-                    var sr = pieceObj.GetComponent<SpriteRenderer>();
-                    sr.sprite = GetSprite(piece.pieceType);
+                    var pieceObj = Instantiate(piecePrefab, cellObj.transform); // parent 변경!
+                    var pieceRt = pieceObj.GetComponent<RectTransform>();
+                    var pieceSize = cellSize * 0.8f;
+                    pieceRt.sizeDelta = new Vector2(pieceSize, pieceSize);
+                    pieceRt.anchoredPosition = Vector2.zero; // 셀 내부 중앙 배치 (local)
 
-                    // 내 말(아군, 아래) vs 상대 말(위쪽)의 기준 정하기
-                    bool isMine = ((playerId == 1 && piece.owner == 1) || (playerId == 2 && piece.owner == 2));
-                    sr.flipY = !isMine;
-                    sr.flipX = !isMine;
+                    var img = pieceObj.GetComponent<Image>();
+                    img.sprite = GetSprite(piece.pieceType);
+
+                    // 회전/플립 필요시
+                    if (piece.owner != model.GetPlayerId())
+                        img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 180f);
                 }
             }
         }

@@ -9,7 +9,7 @@ public enum PieceType
 public class Piece
 {
     public PieceType pieceType;
-    public int stayedTurns;
+    public int stayedTurns; // maybe bool?
     public int owner;
 }
 
@@ -29,7 +29,7 @@ public class ShogiModel : MonoBehaviour
     public Dictionary<int, ShogiPlayer> playersInfo = new Dictionary<int, ShogiPlayer>();
     private GameDataModel gameDataModel;
     private int sessionId;
-    public bool myTurn = false;
+    public bool myTurn;
     public int timeLimit = 90;
     public int timeLeft;
     public List<int> selectedPosition;

@@ -15,7 +15,6 @@ public class APIRequester : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            baseUrl = GameDataModel.Instance.baseUrl;
         }
         else
         {
@@ -25,7 +24,7 @@ public class APIRequester : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        baseUrl = GameDataModel.Instance.baseUrl;
     }
 
     // Update is called once per frame
@@ -42,6 +41,7 @@ public class APIRequester : MonoBehaviour
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
 
+        request.timeout = 30;
         yield return request.SendWebRequest();
 
         if (request.result == UnityWebRequest.Result.Success)

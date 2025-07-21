@@ -33,6 +33,10 @@ public class WaitResponse
     public Move op_position;
     public bool op_is_end;
 }
+public class TimeOutResponse {
+    public bool result;
+    public bool is_end;
+}
 public class ShogiController : MonoBehaviour
 {
     public ShogiModel model;                 // 인스펙터에서 연결 or Find로 획득  // Inspector에 에셋 리스트로 연결
@@ -64,11 +68,12 @@ public class ShogiController : MonoBehaviour
             }
             else
             {
+                Debug.Log("Not movable spot");
                 model.selectedCapturedPiece = null;
                 model.selectedPosition = null;
                 model.movablePositions = null;
+                view.RemoveHighlights();
             }
-
         }
         // 새로운 셀 클릭
         if (model.board[x, y].pieceType != PieceType.Empty)
@@ -112,7 +117,8 @@ public class ShogiController : MonoBehaviour
                     {
                         new() {1,1},
                         new() {2,2},
-                        new() {0,0}
+                        new() {0,0},
+                        new() {0,3}
                     };
                 model.movablePositions = moves;
                 view.HighlightMovableCells(moves);
@@ -281,13 +287,13 @@ public class ShogiController : MonoBehaviour
             bool done = false;
             WaitResponse res = null;
 
-            // 서버에 /shogi/wait(?) API 요청
+            // 서버에 /shogi/wait API 요청
             string json = JsonConvert.SerializeObject(new {
                 session_id = model.GetSessionId(),
                 player_id = model.GetPlayerId()
             });
 
-            StartCoroutine(APIRequester.Instance.PostJson("/shogi/wait", json, (response) => {
+            StartCoroutine(APIRequester.Instance.PostJson("/shogi/wait-turn", json, (response) => {
                 res = JsonConvert.DeserializeObject<WaitResponse>(response);
                 done = true;
             }, (error) => { done = true; }));
@@ -368,7 +374,24 @@ public class ShogiController : MonoBehaviour
     void OnTimerExpired()
     {
         Debug.Log("시간초과!");
+        string json = JsonConvert.SerializeObject(new
+        {
+            session_id = model.GetSessionId(),
+            player_id = model.GetPlayerId()
+        });
         // 서버에 알림, 게임 종료 등 추가 처리
+        StartCoroutine(APIRequester.Instance.PostJson("/shogi/time-out", json, (response) =>
+        {
+            var res = JsonConvert.DeserializeObject<TimeOutResponse>(response);
+            if (res.result)
+            {
+                if (res.is_end)
+                {
+                    // view.ShowGameOver();
+                    // SceneManager.LoadScene("GameSelectScene");
+                }
+            }
+        }));
     }
 
     // Start is called before the first frame update
@@ -381,7 +404,7 @@ public class ShogiController : MonoBehaviour
 
         model.InitializePlayers();
         model.InitializeBoard();
-        model.myTurn = false;
+        model.myTurn = true;
 
         view.ShowBoard();
         view.DisplayTurn();

@@ -44,7 +44,6 @@ public class TimeOutResponse
 }
 public class ShogiController : MonoBehaviour
 {
-    public GameDataModel gameDataModel;
     public ShogiModel model;                 // 인스펙터에서 연결 or Find로 획득  // Inspector에 에셋 리스트로 연결
     public ShogiView view;                   // 뷰를 연결 (또는 코드로 할당)
     private Coroutine turnPollingCoroutine;
@@ -109,7 +108,7 @@ public class ShogiController : MonoBehaviour
         string json = JsonConvert.SerializeObject(req);
 
         
-        StartCoroutine(apiRequester.PostJson("/shogi/available-moves", json, (response) =>
+        StartCoroutine(apiRequester.PostJson("/available-moves", json, (response) =>
         {
             var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
             if (res.result)
@@ -117,9 +116,9 @@ public class ShogiController : MonoBehaviour
                 model.movablePositions = res.moves;
                 view.HighlightMovableCells(res.moves);
             }
-        }, (response) =>
+        }, (error) =>
         {   // JUST FOR TEST
-            Debug.Log("No server Error");
+            Debug.Log(error);
             var moves = new List<List<int>>
                 {
                     new() {1,1},
@@ -153,16 +152,19 @@ public class ShogiController : MonoBehaviour
 
         string json = JsonConvert.SerializeObject(req);
 
-        
-        StartCoroutine(apiRequester.PostJson("/shogi/move", json, (response) =>
+
+        StartCoroutine(apiRequester.PostJson("/move", json, (response) =>
         {
+            Debug.Log(1);
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
+            Debug.Log(2);
             if (res.result)
             {
+                Debug.Log(3);
                 model.board[x, y] = model.board[fromX, fromY];
                 model.board[fromX, fromY] = model.CreateEmptyPiece();
 
-                if (res.capture.is_capture)
+                if (res.capture != null && res.capture.is_capture)
                 {
                     var pieceType = (PieceType)System.Enum.Parse(typeof(PieceType), res.capture.piece);
                     var piece = new Piece
@@ -187,7 +189,7 @@ public class ShogiController : MonoBehaviour
                 else
                     ChangeTurn(false); // 턴 넘기고 폴링
             }
-        }));
+        }, (error) => {Debug.Log(error); }));
     }
     public void RequestDropTo(int x, int y)
     {
@@ -201,7 +203,7 @@ public class ShogiController : MonoBehaviour
             {"to", new List<int> {x, y}}
         };
         string json = JsonConvert.SerializeObject(req);
-        StartCoroutine(apiRequester.PostJson("/shogi/drop", json, (response) =>
+        StartCoroutine(apiRequester.PostJson("/drop", json, (response) =>
         {
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
@@ -226,7 +228,7 @@ public class ShogiController : MonoBehaviour
                 else
                     ChangeTurn(false);
             }
-        }));
+        },(error) => {Debug.Log(error);}));
     }
     public void OnCapturedPieceClicked(Piece piece)
     {
@@ -262,7 +264,7 @@ public class ShogiController : MonoBehaviour
         };
 
         string json = JsonConvert.SerializeObject(req);
-        StartCoroutine(apiRequester.PostJson("/shogi/available-drop", json, (response) =>
+        StartCoroutine(apiRequester.PostJson("/available-drop", json, (response) =>
         {
             var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
             if (res.result)
@@ -270,8 +272,9 @@ public class ShogiController : MonoBehaviour
                 model.movablePositions = res.moves;
                 view.HighlightMovableCells(res.moves);
             }
-        }, (response) =>
+        }, (error) =>
         {   // JUST FOR TEST
+            Debug.Log(error);
             var moves = new List<List<int>>
                 {
                     new() {0,1},
@@ -292,13 +295,13 @@ public class ShogiController : MonoBehaviour
             bool done = false;
             WaitResponse res = null;
 
-            // 서버에 /shogi/wait API 요청
+            // 서버에 /wait API 요청
             string json = JsonConvert.SerializeObject(new {
                 session_id = model.GetSessionId(),
                 player_id = model.GetPlayerId()
             });
 
-            StartCoroutine(apiRequester.PostJson("/shogi/wait-turn", json, (response) => {
+            StartCoroutine(apiRequester.PostJson("/wait-turn", json, (response) => {
                 res = JsonConvert.DeserializeObject<WaitResponse>(response);
                 done = true;
             }, (error) => { done = true; }));
@@ -406,7 +409,7 @@ public class ShogiController : MonoBehaviour
             player_id = model.GetPlayerId()
         });
         // 서버에 알림, 게임 종료 등 추가 처리
-        StartCoroutine(apiRequester.PostJson("/shogi/time-out", json, (response) =>
+        StartCoroutine(apiRequester.PostJson("/timeout", json, (response) =>
         {
             var res = JsonConvert.DeserializeObject<TimeOutResponse>(response);
             if (res.result)
@@ -416,13 +419,17 @@ public class ShogiController : MonoBehaviour
                     GameOver(res.winner);
                 }
             }
+        }, (error)=>
+        {
+            Debug.Log(error);
         }));
     }
 
     private void GetSessionData() {
-        model.SetPlayerId(gameDataModel.playerId);
-        model.SetAdversaryId((gameDataModel.playerId == 1) ? 2 : 1);
-        model.SetSessionId(gameDataModel.sessionId);
+        Debug.Log(GameDataModel.Instance.playerId);
+        model.SetPlayerId(GameDataModel.Instance.playerId);
+        model.SetAdversaryId((GameDataModel.Instance.playerId == 1) ? 2 : 1);
+        model.SetSessionId(GameDataModel.Instance.sessionId);
         model.myTurn = model.GetPlayerId() == 1;
     }
 
@@ -439,6 +446,8 @@ public class ShogiController : MonoBehaviour
     void Start()
     {
         GetSessionData();
+        Debug.Log(model.GetPlayerId());
+        Debug.Log(model.myTurn);
 
         model.InitializePlayers();
         model.InitializeBoard();

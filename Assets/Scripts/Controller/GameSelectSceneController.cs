@@ -133,6 +133,7 @@ public class GameSelectSceneController : MonoBehaviour
         req["player_id"] = model.playerId;
 
         string json = JsonConvert.SerializeObject(req);
+        Debug.Log("PollingStart" + json);
         StartCoroutine(apiRequester.PostJson("/ready", json, (response) =>
         {
             var res = JsonConvert.DeserializeObject<ReadyResponse>(response);

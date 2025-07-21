@@ -273,17 +273,18 @@ public class ShogiController : MonoBehaviour
                 view.HighlightMovableCells(res.moves);
             }
         }, (error) =>
-        {   // JUST FOR TEST
+        {
             Debug.Log(error);
-            var moves = new List<List<int>>
-                {
-                    new() {0,1},
-                    new() {2,1},
-                    new() {0,2},
-                    new() {2,2}
-                };
-            model.movablePositions = moves;
-            view.HighlightMovableCells(moves);
+            // JUST FOR TEST
+            // var moves = new List<List<int>>
+            //     {
+            //         new() {0,1},
+            //         new() {2,1},
+            //         new() {0,2},
+            //         new() {2,2}
+            //     };
+            // model.movablePositions = moves;
+            // view.HighlightMovableCells(moves);
         }));
     }
     // 폴링 루프: 3초마다 내 턴인지 확인 (내 턴이 오면 코루틴 종료, 입력 허용)
@@ -333,6 +334,7 @@ public class ShogiController : MonoBehaviour
                                 model.board[toX, toY] = model.board[fromX, fromY];
                                 model.board[fromX, fromY] = model.CreateEmptyPiece();
                             }
+                            view.ShowBoard();
                         }
                         else // 상대 말 드롭
                         {
@@ -343,8 +345,8 @@ public class ShogiController : MonoBehaviour
 
                             model.board[toX, toY] = droppedPiece;
                             model.playersInfo[model.GetAdversaryId()].capturedPieces.Remove(droppedPiece);
+                            view.ShowBoard();
                         }
-                        view.ShowBoard();
                     }
                     if (res.is_end)
                     {
@@ -357,7 +359,6 @@ public class ShogiController : MonoBehaviour
                         yield break;
                     }
                 }
-                // 아직 내 턴이 아니면 계속 폴링
             }
         }
     }

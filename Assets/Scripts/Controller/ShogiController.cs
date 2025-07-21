@@ -20,6 +20,7 @@ public class MoveResponse
     public bool result;
     public Capture capture;
     public bool is_end;
+    public int winner;
 }
 public class Move
 {
@@ -31,24 +32,31 @@ public class WaitResponse
     public bool result;
     public bool turn;
     public Move op_position;
-    public bool op_is_end;
+    public string op_piece;
+    public bool is_end;
+    public int winner;
 }
-public class TimeOutResponse {
+public class TimeOutResponse
+{
     public bool result;
     public bool is_end;
+    public int winner;
 }
 public class ShogiController : MonoBehaviour
 {
+    public GameDataModel gameDataModel;
     public ShogiModel model;                 // 인스펙터에서 연결 or Find로 획득  // Inspector에 에셋 리스트로 연결
     public ShogiView view;                   // 뷰를 연결 (또는 코드로 할당)
     private Coroutine turnPollingCoroutine;
     private Coroutine timerCoroutine;
+    public APIRequester apiRequester;
     public void OnCellSelected(int x, int y)
     {
         Debug.Log($"cell clicked and controller acknowledged! x: {x}, y: {y}");
         if (!model.myTurn)
         {
             Debug.Log("Not your turn!");
+            view.ShowAlert("Not your turn!");
             return;
         }
         // 이동가능 리스트가 있는 경우
@@ -76,7 +84,7 @@ public class ShogiController : MonoBehaviour
             }
         }
         // 새로운 셀 클릭
-        if (model.board[x, y].pieceType != PieceType.Empty)
+        if (model.board[x, y].pieceType != PieceType.Empty && model.board[x, y].owner == model.GetPlayerId())
         {
             Debug.Log("new cell clicked");
             model.selectedPosition = new List<int> { x, y };
@@ -100,30 +108,28 @@ public class ShogiController : MonoBehaviour
 
         string json = JsonConvert.SerializeObject(req);
 
-        if (APIRequester.Instance != null)
+        
+        StartCoroutine(apiRequester.PostJson("/shogi/available-moves", json, (response) =>
         {
-            StartCoroutine(APIRequester.Instance.PostJson("/shogi/available-moves", json, (response) =>
+            var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
+            if (res.result)
             {
-                var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
-                if (res.result)
+                model.movablePositions = res.moves;
+                view.HighlightMovableCells(res.moves);
+            }
+        }, (response) =>
+        {   // JUST FOR TEST
+            Debug.Log("No server Error");
+            var moves = new List<List<int>>
                 {
-                    model.movablePositions = res.moves;
-                    view.HighlightMovableCells(res.moves);
-                }
-            }, (response) =>
-            {   // JUST FOR TEST
-                Debug.Log("No server Error");
-                var moves = new List<List<int>>
-                    {
-                        new() {1,1},
-                        new() {2,2},
-                        new() {0,0},
-                        new() {0,3}
-                    };
-                model.movablePositions = moves;
-                view.HighlightMovableCells(moves);
-            }));
-        }
+                    new() {1,1},
+                    new() {2,2},
+                    new() {0,0},
+                    new() {0,3}
+                };
+            model.movablePositions = moves;
+            view.HighlightMovableCells(moves);
+        }));
     }
 
     public void RequestMoveTo(int x, int y)
@@ -147,43 +153,41 @@ public class ShogiController : MonoBehaviour
 
         string json = JsonConvert.SerializeObject(req);
 
-        if (APIRequester.Instance != null)
+        
+        StartCoroutine(apiRequester.PostJson("/shogi/move", json, (response) =>
         {
-            StartCoroutine(APIRequester.Instance.PostJson("/shogi/move", json, (response) =>
+            var res = JsonConvert.DeserializeObject<MoveResponse>(response);
+            if (res.result)
             {
-                var res = JsonConvert.DeserializeObject<MoveResponse>(response);
-                if (res.result)
+                model.board[x, y] = model.board[fromX, fromY];
+                model.board[fromX, fromY] = model.CreateEmptyPiece();
+
+                if (res.capture.is_capture)
                 {
-                    if (res.is_end)
+                    var pieceType = (PieceType)System.Enum.Parse(typeof(PieceType), res.capture.piece);
+                    var piece = new Piece
                     {
-                        //TODO
-                    }
-                    else if (res.capture.is_capture)
-                    {
-                        var pieceType = (PieceType)System.Enum.Parse(typeof(PieceType), res.capture.piece);
-                        var piece = new Piece
-                        {
-                            pieceType = pieceType,
-                            stayedTurns = 0,
-                            owner = model.GetPlayerId()
-                        };
-                        model.playersInfo[model.GetPlayerId()].capturedPieces.Add(piece);
-                    }
-                    model.board[x, y] = model.board[fromX, fromY];
-                    model.board[fromX, fromY] = model.CreateEmptyPiece();
-
-                    // 다 끝나고
-                    model.selectedPosition = null;
-                    model.movablePositions = null;
-                    model.selectedCapturedPiece = null;
-                    view.RemoveHighlights();
-                    view.ShowBoard();
-
-                    // 턴 넘기고 폴링
-                    ChangeTurn(false);
+                        pieceType = pieceType,
+                        stayedTurns = 0,
+                        owner = model.GetPlayerId()
+                    };
+                    model.playersInfo[model.GetPlayerId()].capturedPieces.Add(piece);
                 }
-            }));
-        }
+
+                model.selectedPosition = null;
+                model.movablePositions = null;
+                model.selectedCapturedPiece = null;
+                view.RemoveHighlights();
+                view.ShowBoard();
+
+                if (res.is_end)
+                {
+                    GameOver(res.winner);
+                }
+                else
+                    ChangeTurn(false); // 턴 넘기고 폴링
+            }
+        }));
     }
     public void RequestDropTo(int x, int y)
     {
@@ -197,34 +201,39 @@ public class ShogiController : MonoBehaviour
             {"to", new List<int> {x, y}}
         };
         string json = JsonConvert.SerializeObject(req);
-
-        if (APIRequester.Instance != null)
+        StartCoroutine(apiRequester.PostJson("/shogi/drop", json, (response) =>
         {
-            StartCoroutine(APIRequester.Instance.PostJson("/shogi/drop", json, (response) =>
+            var res = JsonConvert.DeserializeObject<MoveResponse>(response);
+            if (res.result)
             {
-                var res = JsonConvert.DeserializeObject<MoveResponse>(response);
-                if (res.result)
+                model.board[x, y] = model.selectedCapturedPiece;
+                var droppedPiece = model.playersInfo[model.GetPlayerId()].capturedPieces
+                    .Where(piece => piece.pieceType == model.selectedCapturedPiece.pieceType)
+                    .FirstOrDefault();
+
+                model.playersInfo[model.GetPlayerId()].capturedPieces.Remove(droppedPiece);
+                // 다 끝나고
+                model.selectedPosition = null;
+                model.movablePositions = null;
+                model.selectedCapturedPiece = null;
+                view.RemoveHighlights();
+                view.ShowBoard();
+
+                if (res.is_end)
                 {
-                    model.board[x, y] = model.selectedCapturedPiece;
-
-                    // 다 끝나고
-                    model.selectedPosition = null;
-                    model.movablePositions = null;
-                    model.selectedCapturedPiece = null;
-                    view.RemoveHighlights();
-                    view.ShowBoard();
-
-                    // 턴 넘기고 폴링
-                    ChangeTurn(false);
+                    GameOver(res.winner);
                 }
-            }));
-        }
+                else
+                    ChangeTurn(false);
+            }
+        }));
     }
     public void OnCapturedPieceClicked(Piece piece)
     {
         if (!model.myTurn)
         {
             Debug.Log("Not your turn!");
+            view.ShowAlert("Not your turn!");
             return;
         }
         if (model.selectedCapturedPiece != null && model.selectedCapturedPiece == piece)
@@ -253,30 +262,26 @@ public class ShogiController : MonoBehaviour
         };
 
         string json = JsonConvert.SerializeObject(req);
-
-        if (APIRequester.Instance != null)
+        StartCoroutine(apiRequester.PostJson("/shogi/available-drop", json, (response) =>
         {
-            StartCoroutine(APIRequester.Instance.PostJson("/shogi/available-drop", json, (response) =>
+            var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
+            if (res.result)
             {
-                var res = JsonConvert.DeserializeObject<AvailableMovesResponse>(response);
-                if (res.result)
+                model.movablePositions = res.moves;
+                view.HighlightMovableCells(res.moves);
+            }
+        }, (response) =>
+        {   // JUST FOR TEST
+            var moves = new List<List<int>>
                 {
-                    model.movablePositions = res.moves;
-                    view.HighlightMovableCells(res.moves);
-                }
-            }, (response) =>
-            {   // JUST FOR TEST
-                var moves = new List<List<int>>
-                    {
-                        new() {0,1},
-                        new() {2,1},
-                        new() {0,2},
-                        new() {2,2}
-                    };
-                model.movablePositions = moves;
-                view.HighlightMovableCells(moves);
-            }));
-        }
+                    new() {0,1},
+                    new() {2,1},
+                    new() {0,2},
+                    new() {2,2}
+                };
+            model.movablePositions = moves;
+            view.HighlightMovableCells(moves);
+        }));
     }
     // 폴링 루프: 3초마다 내 턴인지 확인 (내 턴이 오면 코루틴 종료, 입력 허용)
     IEnumerator TurnPollingRoutine()
@@ -293,7 +298,7 @@ public class ShogiController : MonoBehaviour
                 player_id = model.GetPlayerId()
             });
 
-            StartCoroutine(APIRequester.Instance.PostJson("/shogi/wait-turn", json, (response) => {
+            StartCoroutine(apiRequester.PostJson("/shogi/wait-turn", json, (response) => {
                 res = JsonConvert.DeserializeObject<WaitResponse>(response);
                 done = true;
             }, (error) => { done = true; }));
@@ -305,29 +310,49 @@ public class ShogiController : MonoBehaviour
             {
                 if (res.turn)
                 {
-                    if (res.op_position != null)
+                    if (res.op_position != null && res.op_position.to != null)
                     {
-                        int fromX = res.op_position.from[0];
-                        int fromY = res.op_position.from[1];
                         int toX = res.op_position.to[0];
                         int toY = res.op_position.to[1];
 
-                        Piece toPiece = model.board[toX, toY];
-
-                        if (toPiece.pieceType != PieceType.Empty && toPiece.owner == model.GetPlayerId())
+                        if (res.op_position.from != null) // 상대 말 이동
                         {
-                            toPiece.owner = model.GetAdversaryId();
-                            if (toPiece.pieceType == PieceType.Hoo)
-                                toPiece.pieceType = PieceType.Ja;
-                            model.playersInfo[model.GetAdversaryId()].capturedPieces.Add(toPiece);
-                            model.board[toX, toY] = model.board[fromX, fromY];
-                            model.board[fromX, fromY] = model.CreateEmptyPiece();
+                            int fromX = res.op_position.from[0];
+                            int fromY = res.op_position.from[1];
+                            Piece toPiece = model.board[toX, toY];
+
+                            if (toPiece.pieceType != PieceType.Empty && toPiece.owner == model.GetPlayerId())
+                            {
+                                toPiece.owner = model.GetAdversaryId();
+                                if (toPiece.pieceType == PieceType.Hoo)
+                                    toPiece.pieceType = PieceType.Ja;
+                                model.playersInfo[model.GetAdversaryId()].capturedPieces.Add(toPiece);
+                                model.board[toX, toY] = model.board[fromX, fromY];
+                                model.board[fromX, fromY] = model.CreateEmptyPiece();
+                            }
+                        }
+                        else // 상대 말 드롭
+                        {
+                            var pieceType = (PieceType)System.Enum.Parse(typeof(PieceType), res.op_piece);
+                            var droppedPiece = model.playersInfo[model.GetAdversaryId()].capturedPieces
+                            .Where(piece => piece.pieceType == pieceType)
+                            .FirstOrDefault();
+
+                            model.board[toX, toY] = droppedPiece;
+                            model.playersInfo[model.GetAdversaryId()].capturedPieces.Remove(droppedPiece);
                         }
                         view.ShowBoard();
                     }
-                    // 내 턴이 됨!
-                    ChangeTurn(true);
-                    yield break;
+                    if (res.is_end)
+                    {
+                        GameOver(res.winner);
+                        yield break;
+                    }
+                    else
+                    {
+                        ChangeTurn(true);
+                        yield break;
+                    }
                 }
                 // 아직 내 턴이 아니면 계속 폴링
             }
@@ -345,8 +370,9 @@ public class ShogiController : MonoBehaviour
             model.timeLeft--;
             view.UpdateTimer(model.timeLeft); // UI update(옵션)
         }
-        // 타임오버 처리
-        OnTimerExpired();
+        // 내 턴일 때 타임오버 처리
+        if (model.myTurn)
+            OnTimerExpired();
     }
 
     public void ChangeTurn(bool myTurn)
@@ -380,31 +406,42 @@ public class ShogiController : MonoBehaviour
             player_id = model.GetPlayerId()
         });
         // 서버에 알림, 게임 종료 등 추가 처리
-        StartCoroutine(APIRequester.Instance.PostJson("/shogi/time-out", json, (response) =>
+        StartCoroutine(apiRequester.PostJson("/shogi/time-out", json, (response) =>
         {
             var res = JsonConvert.DeserializeObject<TimeOutResponse>(response);
             if (res.result)
             {
                 if (res.is_end)
                 {
-                    // view.ShowGameOver();
-                    // SceneManager.LoadScene("GameSelectScene");
+                    GameOver(res.winner);
                 }
             }
         }));
     }
 
+    private void GetSessionData() {
+        model.SetPlayerId(gameDataModel.playerId);
+        model.SetAdversaryId((gameDataModel.playerId == 1) ? 2 : 1);
+        model.SetSessionId(gameDataModel.sessionId);
+        model.myTurn = model.GetPlayerId() == 1;
+    }
+
+    public void GameOver(int winner)
+    {
+        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        timerCoroutine = null;
+
+        model.isWin = winner == model.GetPlayerId();
+        view.ShowGameOver(model.isWin);
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        // model.SetPlayerId(userId);
-        model.SetPlayerId(1);   // serverless test용
-
-        model.SetSessionId(GameDataModel.Instance.sessionId);
+        GetSessionData();
 
         model.InitializePlayers();
         model.InitializeBoard();
-        model.myTurn = true;
 
         view.ShowBoard();
         view.DisplayTurn();

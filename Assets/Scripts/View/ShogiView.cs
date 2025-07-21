@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class ShogiView : MonoBehaviour
@@ -17,6 +18,10 @@ public class ShogiView : MonoBehaviour
     public GameObject myTurnPanel;    // 내 턴일 때 표시할 패널
     public GameObject opTurnPanel;    // 상대 턴일 때 표시할 패널
     public TextMeshProUGUI timeText;
+    public GameObject gameOverPanel;
+    public TextMeshProUGUI winText;
+    public Button gameOverButton;
+    public TextMeshProUGUI alertText;
 
     public Sprite wangSprite, changSprite, sangSprite, jaSprite, hooSprite; // 기물별 스프라이트
 
@@ -260,10 +265,43 @@ public class ShogiView : MonoBehaviour
         controller.OnCapturedPieceClicked(piece);
     }
 
+    public void ShowGameOver(bool isWin)
+    {
+        gameOverPanel.SetActive(true);
+        if (isWin)
+            winText.text = "You won!";
+        else
+            winText.text = "You lost!";
+        OnGameOverButtonClicked();
+    }
+
+    public void OnGameOverButtonClicked()
+    {
+        SceneManager.LoadScene("GameSelectScene");
+    }
+    
+    public void ShowAlert(string message)
+    {
+        if (alertText == null) return;
+        alertText.text = message;
+        alertText.gameObject.SetActive(true);
+
+        // 기존 코루틴이 있다면 중복 방지
+        StopCoroutine("HideAlertCoroutine");
+        StartCoroutine(HideAlertCoroutine());
+    }
+
+    IEnumerator HideAlertCoroutine()
+    {
+        yield return new WaitForSeconds(3f);
+        if (alertText != null)
+            alertText.gameObject.SetActive(false);
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        gameOverButton.onClick.AddListener(OnGameOverButtonClicked);
     }
 
     // Update is called once per frame

@@ -12,7 +12,7 @@ public class GameDataModel : MonoBehaviour
     public string userName;
     public string currentRoomName;
     public string currentRoomPassword;
-    public int sessionId;
+    public int sessionId = 0;
     public string selectedGame; // gameselectionscene에서 게임 누르면 설정
     public int playerId;
     public string baseUrl;

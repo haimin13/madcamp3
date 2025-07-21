@@ -16,6 +16,7 @@ public class CreateRoomResponse
 
 public class ReadyResponse
 {
+    public bool result;
     public bool startSignal;
 }
 
@@ -33,14 +34,13 @@ public class GameSelectSceneController : MonoBehaviour
     public GameSelectSceneView view;
     public APIRequester apiRequester;
 
-    private Coroutine readyPollingCoroutine;
-
     // Start is called before the first frame update
     void Start()
     {
         model = GameDataModel.Instance;
         apiRequester = APIRequester.Instance;
         model.userId = 123;
+        CloseLobby();
     }
 
     // Update is called once per frame
@@ -71,16 +71,14 @@ public class GameSelectSceneController : MonoBehaviour
         {
             Debug.Log(response);
             var res = JsonConvert.DeserializeObject<CreateRoomResponse>(response);
-            if (res.result)
+            if (res.result && res.session_id != 0)
             {
                 model.sessionId = res.session_id;
                 model.playerId = res.player_id;
                 model.currentRoomName = res.roomName;
                 model.currentRoomPassword = res.roomPW;
                 view.ShowRoomPassword(model.currentRoomPassword);
-                if (readyPollingCoroutine != null)
-                    StopCoroutine(readyPollingCoroutine);
-                readyPollingCoroutine = StartCoroutine(ReadyPollingRoutine());
+                ReadyPolling();
             }
             else
             {
@@ -110,7 +108,7 @@ public class GameSelectSceneController : MonoBehaviour
         StartCoroutine(apiRequester.PostJson("/enter-room", json, (response) =>
         {
             var res = JsonConvert.DeserializeObject<EnterRoomResponse>(response);
-            if (res.result)
+            if (res.result && res.session_id != 0)
             // if (res.result && res.startSignal)
             {
                 model.sessionId = res.session_id;
@@ -120,6 +118,7 @@ public class GameSelectSceneController : MonoBehaviour
             }
             else
             {
+                Debug.Log("no such room exist");
                 view.ClearRoomNameAndPassword();
             }
         }, (error) =>
@@ -128,56 +127,47 @@ public class GameSelectSceneController : MonoBehaviour
         }));
     }
 
-    IEnumerator ReadyPollingRoutine()
+    public void ReadyPolling()
     {
-        while (true)
+        var req = new Dictionary<string, object>();
+        req["session_id"] = model.sessionId;
+        req["player_id"] = model.playerId;
+
+        string json = JsonConvert.SerializeObject(req);
+        StartCoroutine(apiRequester.PostJson("/ready", json, (response) =>
         {
-            // 3초 대기
-            // yield return new WaitForSeconds(3f); 즉시 다시 시작
-            bool done = false;
-            ReadyResponse res = null;
-
-            var req = new Dictionary<string, object>();
-            req["session_id"] = model.sessionId;
-            req["player_id"] = model.playerId;
-
-            string json = JsonConvert.SerializeObject(req);
-            StartCoroutine(apiRequester.PostJson("/ready", json, (response) =>
-            {
-                res = JsonConvert.DeserializeObject<ReadyResponse>(response);
-                done = true;
-            }, (error) =>
-            {
-                Debug.LogWarning($"ReadyPolling 에러: {error}");
-                done = true;
-            }));
-
-            yield return new WaitUntil(() => done);
-            Debug.Log("check done");
-
-            if (res != null)
+            var res = JsonConvert.DeserializeObject<ReadyResponse>(response);
+            if (res.result)
             {
                 if (res.startSignal)
-                // if (res.result && res.startSignal)
                 {
-                    Debug.Log("Game Start Signal - 씬 이동!");
-                    readyPollingCoroutine = null; // 필요시 클래스 필드
+                    Debug.Log("User Found!");
                     SceneManager.LoadScene($"{model.selectedGame}Scene");
-                    yield break;
                 }
                 else
-                    Debug.Log("아직 대기 중...");
-                view.ShowAlert("waiting...");
-                // 카운트해서 너무 오랫동안 기다리면 룸 파괴?
+                {
+                    Debug.Log("No User Found");
+                    view.ShowAlert("No user found. closing the room");
+                    CloseRoom();
+                }
             }
-        }
+        }, (error) =>
+        {
+            Debug.LogWarning($"ReadyPolling 에러: {error}");
+            CloseRoom();
+        }));
     }
 
     public void CloseRoom()
     {
-        model.selectedGame = null;
         model.currentRoomName = null;
         model.currentRoomPassword = null;
         model.sessionId = 0;
+        model.playerId = 0;
+    }
+    public void CloseLobby()
+    {
+        CloseRoom();
+        model.selectedGame = null;
     }
 }

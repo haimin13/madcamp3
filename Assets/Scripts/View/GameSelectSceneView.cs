@@ -7,6 +7,7 @@ using TMPro;
 public class GameSelectSceneView : MonoBehaviour
 {
     public GameSelectSceneController controller;
+    public GameDataModel model;
 
     public Button shogiButton;
 
@@ -74,6 +75,11 @@ public class GameSelectSceneView : MonoBehaviour
 
     public void OnCreateRoomConfirmClicked()
     {
+        if (model.sessionId != 0)
+        {
+            ShowAlert("Room already created and waiting");
+            return;
+        }
         string roomName = createRoomNameInput.text.Trim();
         controller.CreateRoom(roomName);
     }
@@ -92,7 +98,6 @@ public class GameSelectSceneView : MonoBehaviour
 
     public void ClearRoomNameAndPassword()
     {
-
         enterRoomNameInput.text = "";
         enterRoomPasswordInput.text = "";
         ShowAlert("Wrong room name or password. try again.");
@@ -118,7 +123,7 @@ public class GameSelectSceneView : MonoBehaviour
 
     public void OnCloseLobbyClicked()
     {
-        
+        controller.CloseLobby();
         lobbyPanel.SetActive(false);
     }
     public void OnCloseCEClicked()

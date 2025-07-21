@@ -27,9 +27,9 @@ public class ShogiModel : MonoBehaviour
     private int playerId;
     private int adversaryId;
     public Dictionary<int, ShogiPlayer> playersInfo = new Dictionary<int, ShogiPlayer>();
-    private GameDataModel gameDataModel;
     private int sessionId;
     public bool myTurn;
+    public bool isWin = false;
     public int timeLimit = 90;
     public int timeLeft;
     public List<int> selectedPosition;
@@ -101,7 +101,7 @@ public class ShogiModel : MonoBehaviour
                 capturedPieces = new List<Piece> { }
             };
             //for TEST
-            {
+            /*{
                 playersInfo[i].capturedPieces.Add(new Piece
                 {
                     pieceType = PieceType.Chang,
@@ -140,6 +140,7 @@ public class ShogiModel : MonoBehaviour
                 });
 
             }
+            */
         }
 
     }
@@ -157,10 +158,7 @@ public class ShogiModel : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (GameDataModel.Instance != null)
-            gameDataModel = GameDataModel.Instance;
-        else
-            Debug.Log("No GameDataModel Object");
+        
     }
 
     // Update is called once per frame

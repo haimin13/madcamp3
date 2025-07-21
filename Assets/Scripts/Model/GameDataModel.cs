@@ -27,7 +27,7 @@ public class GameDataModel : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(this.gameObject); // 씬 전환 시 파괴되지 않게 함
-        baseUrl = "http://13.60.30.23:5000/Shogi";
+        baseUrl = "http://13.60.30.23:5000/shogi";
     }
 
     // 필요하다면 Start/Update 사용하세요!

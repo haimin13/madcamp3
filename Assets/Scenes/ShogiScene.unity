@@ -1356,7 +1356,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c320c47a9f6b93d49a84c3601216e99c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameDataModel: {fileID: 367563514}
   model: {fileID: 438091347}
   view: {fileID: 1919531980}
   apiRequester: {fileID: 577672100}
@@ -1601,7 +1600,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1787674051
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1618,10 +1617,10 @@ RectTransform:
   - {fileID: 886872801}
   m_Father: {fileID: 2102335140}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 600, y: 600}
+  m_SizeDelta: {x: -480, y: -14}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1787674052
 MonoBehaviour:
@@ -1946,11 +1945,16 @@ MonoBehaviour:
   winText: {fileID: 577084998}
   gameOverButton: {fileID: 886872802}
   alertText: {fileID: 1400310006}
-  wangSprite: {fileID: 21300000, guid: 0be969792f7d45749aa04ea5fc0ef691, type: 3}
-  changSprite: {fileID: 21300000, guid: 99c7ff6acb627164aa37c766e5479c22, type: 3}
-  sangSprite: {fileID: 21300000, guid: 17b232001bbc74948806d4c27af26738, type: 3}
-  jaSprite: {fileID: 21300000, guid: 1a1e8b19170ab714992c730614b49018, type: 3}
-  hooSprite: {fileID: 21300000, guid: 8a6083e890c55db4f86d8632adc08e3b, type: 3}
+  wangMy: {fileID: 21300000, guid: 0be969792f7d45749aa04ea5fc0ef691, type: 3}
+  changMy: {fileID: 21300000, guid: 99c7ff6acb627164aa37c766e5479c22, type: 3}
+  sangMy: {fileID: 21300000, guid: 17b232001bbc74948806d4c27af26738, type: 3}
+  jaMy: {fileID: 21300000, guid: 1a1e8b19170ab714992c730614b49018, type: 3}
+  hooMy: {fileID: 21300000, guid: 8a6083e890c55db4f86d8632adc08e3b, type: 3}
+  wangTheir: {fileID: 21300000, guid: b6231aa42403c2741bba3c72e58645ae, type: 3}
+  changTheir: {fileID: 21300000, guid: 40852d5f9d3f17d499acb21fcf016c59, type: 3}
+  sangTheir: {fileID: 21300000, guid: 4a0d6b6135dc4cd4c9b1150a0313dcb8, type: 3}
+  jaTheir: {fileID: 21300000, guid: 0cbfd573ff72081499eb67011f345496, type: 3}
+  hooTheir: {fileID: 21300000, guid: b9a01d8ce1b188244a0d238a7392ae6a, type: 3}
 --- !u!1 &2102335136
 GameObject:
   m_ObjectHideFlags: 0

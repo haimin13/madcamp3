@@ -23,17 +23,17 @@ public class ShogiView : MonoBehaviour
     public Button gameOverButton;
     public TextMeshProUGUI alertText;
 
-    public Sprite wangSprite, changSprite, sangSprite, jaSprite, hooSprite; // 기물별 스프라이트
+    public Sprite wangMy, changMy, sangMy, jaMy, hooMy, wangTheir, changTheir, sangTheir, jaTheir, hooTheir; // 기물별 스프라이트
 
-    Sprite GetSprite(PieceType type)
+    Sprite GetSprite(PieceType type, bool isMine)
     {
         switch(type)
         {
-            case PieceType.Wang:  return wangSprite;
-            case PieceType.Chang: return changSprite;
-            case PieceType.Sang:  return sangSprite;
-            case PieceType.Ja:    return jaSprite;
-            case PieceType.Hoo:   return hooSprite;
+            case PieceType.Wang:  return isMine ? wangMy : wangTheir;
+            case PieceType.Chang: return isMine ? changMy : changTheir;
+            case PieceType.Sang:  return isMine ? sangMy : sangTheir;
+            case PieceType.Ja:    return isMine ? jaMy : jaTheir;
+            case PieceType.Hoo:   return isMine ? hooMy : hooTheir;
             default:              return null;
         }
     }
@@ -101,7 +101,7 @@ public class ShogiView : MonoBehaviour
                     pieceRt.anchoredPosition = Vector2.zero; // 셀 내부 중앙 배치 (local)
 
                     var img = pieceObj.GetComponent<Image>();
-                    img.sprite = GetSprite(piece.pieceType);
+                    img.sprite = GetSprite(piece.pieceType, piece.owner == model.GetPlayerId());
 
                     // 회전/플립 필요시
                     if (piece.owner != model.GetPlayerId())
@@ -205,7 +205,7 @@ public class ShogiView : MonoBehaviour
                 rt.anchoredPosition = new Vector2(x, y);
 
                 var img = obj.GetComponent<Image>();
-                Sprite pieceSprite = GetSprite(piece.pieceType);
+                Sprite pieceSprite = GetSprite(piece.pieceType, piece.owner == model.GetPlayerId());
                 if (img != null) img.sprite = pieceSprite;
 
                 var btn = obj.GetComponent<Button>();

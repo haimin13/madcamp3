@@ -453,12 +453,8 @@ public class ShogiController : MonoBehaviour
         {
             var res = JsonConvert.DeserializeObject<TimeOutResponse>(response);
             if (res.result)
-            {
                 if (res.is_end)
-                {
                     GameOver(res.winner);
-                }
-            }
         }, (error)=>
         {
             Debug.Log(error);

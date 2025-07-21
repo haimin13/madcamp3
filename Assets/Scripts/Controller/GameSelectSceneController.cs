@@ -39,7 +39,6 @@ public class GameSelectSceneController : MonoBehaviour
     {
         model = GameDataModel.Instance;
         apiRequester = APIRequester.Instance;
-        model.userId = 123;
         CloseLobby();
     }
 

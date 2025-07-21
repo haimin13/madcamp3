@@ -35,6 +35,8 @@ public class APIRequester : MonoBehaviour
     public IEnumerator PostJson(string api, string json, System.Action<string> onSuccess = null, System.Action<string> onError = null)
     {
         var url = baseUrl + api;
+        Debug.Log(url);
+        
         var request = new UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);

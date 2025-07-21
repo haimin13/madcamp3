@@ -4976,6 +4976,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 294195730}
+  model: {fileID: 339669053}
   shogiButton: {fileID: 1773168254}
   lobbyPanel: {fileID: 1812958517}
   createRoomButton: {fileID: 1086637094}

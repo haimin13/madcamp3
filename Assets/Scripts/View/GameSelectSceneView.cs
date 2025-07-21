@@ -75,6 +75,10 @@ public class GameSelectSceneView : MonoBehaviour
 
     public void OnCreateRoomConfirmClicked()
     {
+        if (model == null)
+        {
+            Debug.Log("model is null");
+        }
         if (model.sessionId != 0)
         {
             ShowAlert("Room already created and waiting");

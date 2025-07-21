@@ -22,6 +22,10 @@ public class ShogiView : MonoBehaviour
     public TextMeshProUGUI winText;
     public Button gameOverButton;
     public TextMeshProUGUI alertText;
+    private bool boardCellsInitialized = false;
+    private GameObject[,] cellObjects;
+    private GameObject[,] pieceObjects;
+    public float cellSize = 140f;
 
     public Sprite wangMy, changMy, sangMy, jaMy, hooMy, wangTheir, changTheir, sangTheir, jaTheir, hooTheir; // 기물별 스프라이트
 
@@ -47,38 +51,36 @@ public class ShogiView : MonoBehaviour
         myTurnPanel.SetActive(model.myTurn);      // 내 턴이면 내 턴 패널 활성화
         opTurnPanel.SetActive(!model.myTurn);     // 내 턴이 아니면 상대 턴 패널 활성화
     }
-    public void ShowBoard()
+    
+    public void InitBoardCells()
     {
         int width = model.board.GetLength(0);
         int height = model.board.GetLength(1);
         int playerId = model.GetPlayerId();
-        float cellSize = 140f; // 픽셀 단위, 패널 크기에 맞게 설정!
 
         Vector2 boardOrigin = new Vector2(-(width - 1) / 2f * cellSize, -(height - 1) / 2f * cellSize);
 
-        // 기존 자식 모두 삭제
-        foreach (Transform child in boardRoot)
-            Destroy(child.gameObject);
+        cellObjects = new GameObject[width, height];
+
+        // 이미 생성됐다면 리턴(중복 방지)
+        if (boardCellsInitialized) return;
 
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                // 시점 변환
                 int drawX, drawY;
                 if (playerId == 1) { drawX = x; drawY = y; }
                 else { drawX = width - 1 - x; drawY = height - 1 - y; }
 
                 Vector2 pos = boardOrigin + new Vector2(drawX * cellSize, drawY * cellSize);
 
-                // 셀 생성 (Image 기반)
                 var cellObj = Instantiate(cellPrefab, boardRoot);
                 var rt = cellObj.GetComponent<RectTransform>();
                 rt.sizeDelta = new Vector2(cellSize, cellSize);
                 rt.anchoredPosition = pos;
 
                 var cellImg = cellObj.GetComponent<Image>();
-                // 배경색 지정 (초록/빨강/흰)
                 if (drawY == 0)
                     cellImg.color = new Color(0f, 1f, 0f, 0.5f);
                 else if (drawY == height - 1)
@@ -90,29 +92,130 @@ public class ShogiView : MonoBehaviour
                 if (cellView != null)
                     cellView.Init(x, y, drawX, drawY, this);
 
-                // Piece 있으면
+                cellObjects[x, y] = cellObj;
+            }
+        }
+        boardCellsInitialized = true;
+    }
+
+    public void ShowPieces()
+    {
+        int width = model.board.GetLength(0);
+        int height = model.board.GetLength(1);
+        int playerId = model.GetPlayerId();
+        float cellSize = 140f; // 셀 사이즈는 동일하게
+
+        // 초기화
+        if (pieceObjects == null) {
+            pieceObjects = new GameObject[width, height];
+        }
+
+        // 기존 piece 이미지 오브젝트 모두 삭제
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+            {
+                if (pieceObjects[x, y] != null)
+                {
+                    Destroy(pieceObjects[x, y]);
+                    pieceObjects[x, y] = null;
+                }
+            }
+
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+            {
                 Piece piece = model.board[x, y];
                 if (piece.pieceType != PieceType.Empty)
                 {
-                    var pieceObj = Instantiate(piecePrefab, cellObj.transform); // parent 변경!
+                    Transform parent = cellObjects[x, y].transform; // 셀의 자식으로 피스 배치
+                    var pieceObj = Instantiate(piecePrefab, parent);
                     var pieceRt = pieceObj.GetComponent<RectTransform>();
                     var pieceSize = cellSize * 0.8f;
                     pieceRt.sizeDelta = new Vector2(pieceSize, pieceSize);
-                    pieceRt.anchoredPosition = Vector2.zero; // 셀 내부 중앙 배치 (local)
+                    pieceRt.anchoredPosition = Vector2.zero;
 
                     var img = pieceObj.GetComponent<Image>();
                     img.sprite = GetSprite(piece.pieceType, piece.owner == model.GetPlayerId());
 
-                    // 회전/플립 필요시
+                    // 회전 필요시
                     if (piece.owner != model.GetPlayerId())
                         img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 180f);
+
+                    pieceObjects[x, y] = pieceObj;
                 }
             }
+    }
+
+    
+    public void ShowBoard()
+    {
+        if (!boardCellsInitialized)
+            InitBoardCells();
+        // animation 먼저 보여주기
+        var moveDelta = GetMoveDelta(model.prevBoard, model.board);
+        if (moveDelta.HasValue)
+        {
+            var (from, to, moveType) = moveDelta.Value;
+            if (moveType == "move")
+                AnimateMove(from, to);
+            else if (moveType == "caught")
+                AnimateCapture(from, to);
+            else if (moveType == "drop")
+                AnimateDrop(to);
         }
+
+        ShowPieces();
         RemoveHighlights();
         SetupCapturedPanels();
         ShowCapturedPieces();
     }
+    public (List<int> from, List<int> to, string moveType)? GetMoveDelta(Piece[,] prev, Piece[,] curr)
+    {
+        if (prev == null) return null;
+
+        List<int> from = null, to = null;
+        string moveType = "";
+        int width = prev.GetLength(0), height = prev.GetLength(1);
+
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+            {
+                Piece prevPiece = prev[x, y];
+                Piece curPiece = curr[x, y];
+                if (prevPiece.owner != curPiece.owner)
+                {
+                    if (curPiece.owner != 0) // 01 02 12 21
+                    {
+                        to = new List<int> { x, y };
+                        if (prevPiece.owner != 0) // 12 21
+                            moveType = "caught";
+                        else // 01 02
+                            moveType = "move";
+                    }
+                    else // 10 20
+                        from = new List<int> { x, y };
+                }
+            }
+        if (from == null)
+            moveType = "drop";
+        if (to != null)
+            return (from, to, moveType);
+        return null;
+    }
+
+    public void AnimateMove(List<int> from, List<int> to)
+    {
+        int fromX = from[0]; int fromY = from[1]; int toX = to[0]; int toY = to[1];
+    }
+    public void AnimateCapture(List<int> from, List<int> to)
+    {
+        int fromX = from[0]; int fromY = from[1]; int toX = to[0]; int toY = to[1];
+    }
+    public void AnimateDrop(List<int> to)
+    {
+        int toX = to[0]; int toY = to[1];
+    }
+
     public void RemoveHighlights()
     {
         foreach (Transform child in boardRoot)

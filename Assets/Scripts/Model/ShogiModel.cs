@@ -22,6 +22,7 @@ public class ShogiPlayer
 
 public class ShogiModel : MonoBehaviour
 {
+    public Piece[,] prevBoard;
     public Piece[,] board;
     public int turn;    // 지금 누구 턴인가? 1 or 2
     private int playerId;

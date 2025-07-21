@@ -117,15 +117,15 @@ public class ShogiController : MonoBehaviour
         }, (error) =>
         {   // JUST FOR TEST
             Debug.Log(error);
-            var moves = new List<List<int>>
-                {
-                    new() {1,1},
-                    new() {2,2},
-                    new() {0,0},
-                    new() {0,3}
-                };
-            model.movablePositions = moves;
-            view.HighlightMovableCells(moves);
+            // var moves = new List<List<int>>
+            //     {
+            //         new() {1,1},
+            //         new() {2,2},
+            //         new() {0,0},
+            //         new() {0,3}
+            //     };
+            // model.movablePositions = moves;
+            // view.HighlightMovableCells(moves);
         }));
     }
 
@@ -156,6 +156,7 @@ public class ShogiController : MonoBehaviour
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
             {
+                SavePrevBoard();
                 Piece sourcePiece = model.board[fromX, fromY];
                 Piece movedPiece = new Piece
                 {
@@ -211,6 +212,7 @@ public class ShogiController : MonoBehaviour
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
             {
+                SavePrevBoard();
                 Piece droppedPiece = model.selectedCapturedPiece;
                 Piece newPiece = new Piece
                 {
@@ -323,6 +325,7 @@ public class ShogiController : MonoBehaviour
                 {
                     if (res.op_position != null && res.op_position.to != null)
                     {
+                        SavePrevBoard();
                         Debug.Log("상대 말에 변화있음!");
                         int toX = res.op_position.to[0];
                         int toY = res.op_position.to[1];
@@ -485,6 +488,24 @@ public class ShogiController : MonoBehaviour
         Debug.Log($"{model.board[0, 1].pieceType.ToString()}{model.board[1, 1].pieceType.ToString()}{model.board[2, 1].pieceType.ToString()}");
         Debug.Log($"{model.board[0, 0].pieceType.ToString()}{model.board[1, 0].pieceType.ToString()}{model.board[2, 0].pieceType.ToString()}");
         
+    }
+
+    public void SavePrevBoard()
+    {
+        int width = model.board.GetLength(0);
+        int height = model.board.GetLength(1);
+
+        model.prevBoard = new Piece[width, height];
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+            {
+                model.prevBoard[x, y] = new Piece
+                {
+                    pieceType = model.board[x, y].pieceType,
+                    owner = model.board[x, y].owner,
+                    stayedTurns = model.board[x, y].stayedTurns
+                };
+            }
     }
 
     // Start is called before the first frame update

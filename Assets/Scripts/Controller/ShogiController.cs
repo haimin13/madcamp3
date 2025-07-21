@@ -54,7 +54,6 @@ public class ShogiController : MonoBehaviour
         Debug.Log($"cell clicked and controller acknowledged! x: {x}, y: {y}");
         if (!model.myTurn)
         {
-            Debug.Log("Not your turn!");
             view.ShowAlert("Not your turn!");
             return;
         }
@@ -85,7 +84,6 @@ public class ShogiController : MonoBehaviour
         // 새로운 셀 클릭
         if (model.board[x, y].pieceType != PieceType.Empty && model.board[x, y].owner == model.GetPlayerId())
         {
-            Debug.Log("new cell clicked");
             model.selectedPosition = new List<int> { x, y };
             model.selectedCapturedPiece = null;
             RequestAvailableMoves(x, y);
@@ -155,13 +153,17 @@ public class ShogiController : MonoBehaviour
 
         StartCoroutine(apiRequester.PostJson("/move", json, (response) =>
         {
-            Debug.Log(1);
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
-            Debug.Log(2);
             if (res.result)
             {
-                Debug.Log(3);
-                model.board[x, y] = model.board[fromX, fromY];
+                Piece sourcePiece = model.board[fromX, fromY];
+                Piece movedPiece = new Piece
+                {
+                    pieceType = sourcePiece.pieceType,
+                    owner = sourcePiece.owner,
+                    stayedTurns = 0
+                };
+                model.board[x, y] = movedPiece;
                 model.board[fromX, fromY] = model.CreateEmptyPiece();
 
                 if (res.capture != null && res.capture.is_capture)
@@ -175,6 +177,7 @@ public class ShogiController : MonoBehaviour
                     };
                     model.playersInfo[model.GetPlayerId()].capturedPieces.Add(piece);
                 }
+                DebugBoard();
 
                 model.selectedPosition = null;
                 model.movablePositions = null;
@@ -208,12 +211,17 @@ public class ShogiController : MonoBehaviour
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
             {
-                model.board[x, y] = model.selectedCapturedPiece;
-                var droppedPiece = model.playersInfo[model.GetPlayerId()].capturedPieces
-                    .Where(piece => piece.pieceType == model.selectedCapturedPiece.pieceType)
-                    .FirstOrDefault();
-
+                Piece droppedPiece = model.selectedCapturedPiece;
+                Piece newPiece = new Piece
+                {
+                    pieceType = droppedPiece.pieceType,
+                    owner = droppedPiece.owner,
+                    stayedTurns = 0
+                };
+                model.board[x, y] = newPiece;
                 model.playersInfo[model.GetPlayerId()].capturedPieces.Remove(droppedPiece);
+                DebugBoard();
+
                 // 다 끝나고
                 model.selectedPosition = null;
                 model.movablePositions = null;
@@ -234,7 +242,6 @@ public class ShogiController : MonoBehaviour
     {
         if (!model.myTurn)
         {
-            Debug.Log("Not your turn!");
             view.ShowAlert("Not your turn!");
             return;
         }
@@ -292,7 +299,7 @@ public class ShogiController : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(1f);
             bool done = false;
             WaitResponse res = null;
 
@@ -316,38 +323,68 @@ public class ShogiController : MonoBehaviour
                 {
                     if (res.op_position != null && res.op_position.to != null)
                     {
+                        Debug.Log("상대 말에 변화있음!");
                         int toX = res.op_position.to[0];
                         int toY = res.op_position.to[1];
 
                         if (res.op_position.from != null) // 상대 말 이동
                         {
+                            Debug.Log("상대 말 이동함!");
                             int fromX = res.op_position.from[0];
                             int fromY = res.op_position.from[1];
                             Piece toPiece = model.board[toX, toY];
 
                             if (toPiece.pieceType != PieceType.Empty && toPiece.owner == model.GetPlayerId())
                             {
-                                toPiece.owner = model.GetAdversaryId();
-                                if (toPiece.pieceType == PieceType.Hoo)
-                                    toPiece.pieceType = PieceType.Ja;
-                                model.playersInfo[model.GetAdversaryId()].capturedPieces.Add(toPiece);
-                                model.board[toX, toY] = model.board[fromX, fromY];
-                                model.board[fromX, fromY] = model.CreateEmptyPiece();
+                                Piece capturePiece = new Piece
+                                {
+                                    pieceType = (toPiece.pieceType == PieceType.Hoo) ? PieceType.Ja : toPiece.pieceType,
+                                    owner = model.GetAdversaryId(),
+                                    stayedTurns = 0
+                                };
+
+                                model.playersInfo[model.GetAdversaryId()].capturedPieces.Add(capturePiece);
                             }
+
+                            Piece sourcePiece = model.board[fromX, fromY];
+                            if (sourcePiece.pieceType == PieceType.Ja && (
+                                (model.GetAdversaryId() == 1 && toY == 3) || (model.GetAdversaryId() == 2 && toY == 0)))
+                                sourcePiece.pieceType = PieceType.Hoo;
+
+                            Piece movedPiece = new Piece
+                            {
+                                pieceType = sourcePiece.pieceType,
+                                owner = sourcePiece.owner,
+                                stayedTurns = 0
+                            };
+                            
+                            model.board[toX, toY] = movedPiece;
+                            model.board[fromX, fromY] = model.CreateEmptyPiece();
+                            DebugBoard();
                             view.ShowBoard();
                         }
                         else // 상대 말 드롭
                         {
-                            var pieceType = (PieceType)System.Enum.Parse(typeof(PieceType), res.op_piece);
-                            var droppedPiece = model.playersInfo[model.GetAdversaryId()].capturedPieces
-                            .Where(piece => piece.pieceType == pieceType)
-                            .FirstOrDefault();
+                            Debug.Log("상대 말 드랍함!");
+                            PieceType droppedType = (PieceType)System.Enum.Parse(typeof(PieceType), res.op_piece);
 
-                            model.board[toX, toY] = droppedPiece;
+                            Piece newPiece = new Piece
+                            {
+                                pieceType = droppedType,
+                                owner = model.GetAdversaryId(),
+                                stayedTurns = 0
+                            };
+                            model.board[toX, toY] = newPiece;
+                            var droppedPiece = model.playersInfo[model.GetAdversaryId()].capturedPieces
+                                .Where(piece => piece.pieceType == droppedType)
+                                .FirstOrDefault();
+
                             model.playersInfo[model.GetAdversaryId()].capturedPieces.Remove(droppedPiece);
+                            DebugBoard();
                             view.ShowBoard();
                         }
                     }
+                    else Debug.Log("상대 말에 변화안함!");
                     if (res.is_end)
                     {
                         GameOver(res.winner);
@@ -381,6 +418,8 @@ public class ShogiController : MonoBehaviour
 
     public void ChangeTurn(bool myTurn)
     {
+        string json = JsonConvert.SerializeObject(model.board);
+        Debug.Log(json);
         model.myTurn = myTurn;
         view.DisplayTurn();
         StartTimer();
@@ -427,7 +466,6 @@ public class ShogiController : MonoBehaviour
     }
 
     private void GetSessionData() {
-        Debug.Log(GameDataModel.Instance.playerId);
         model.SetPlayerId(GameDataModel.Instance.playerId);
         model.SetAdversaryId((GameDataModel.Instance.playerId == 1) ? 2 : 1);
         model.SetSessionId(GameDataModel.Instance.sessionId);
@@ -436,6 +474,7 @@ public class ShogiController : MonoBehaviour
 
     public void GameOver(int winner)
     {
+        view.ShowBoard();
         if (timerCoroutine != null) StopCoroutine(timerCoroutine);
         timerCoroutine = null;
 
@@ -443,12 +482,19 @@ public class ShogiController : MonoBehaviour
         view.ShowGameOver(model.isWin);
     }
 
+    public void DebugBoard()
+    {
+        Debug.Log($"{model.board[0, 3].pieceType.ToString()}{model.board[1, 3].pieceType.ToString()}{model.board[2, 3].pieceType.ToString()}");
+        Debug.Log($"{model.board[0, 2].pieceType.ToString()}{model.board[1, 2].pieceType.ToString()}{model.board[2, 2].pieceType.ToString()}");
+        Debug.Log($"{model.board[0, 1].pieceType.ToString()}{model.board[1, 1].pieceType.ToString()}{model.board[2, 1].pieceType.ToString()}");
+        Debug.Log($"{model.board[0, 0].pieceType.ToString()}{model.board[1, 0].pieceType.ToString()}{model.board[2, 0].pieceType.ToString()}");
+        
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         GetSessionData();
-        Debug.Log(model.GetPlayerId());
-        Debug.Log(model.myTurn);
 
         model.InitializePlayers();
         model.InitializeBoard();

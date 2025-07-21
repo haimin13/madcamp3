@@ -151,13 +151,14 @@ public class ShogiView : MonoBehaviour
             int x = pos[0];
             int y = pos[1];
             // Player 시점 좌표로 전환
-            Vector2Int screenPos = ModelToPlayerCoords(playerId, x, y, width, height);
+            //Vector2Int screenPos = ModelToPlayerCoords(playerId, x, y, width, height);
 
             // 화면에 있는 cell x,y와 일치하는 CellView 찾기
             foreach (Transform child in boardRoot)
             {
                 var cell = child.GetComponent<CellView>();
-                if (cell != null && cell.x == screenPos.x && cell.y == screenPos.y)
+                //if (cell != null && cell.x == screenPos.x && cell.y == screenPos.y)
+                if (cell != null && cell.x == x && cell.y == y)
                 {
                     cell.Highlight(true);
                 }
@@ -266,20 +267,19 @@ public class ShogiView : MonoBehaviour
     }
 
     public void ShowGameOver(bool isWin)
-    {
-        gameOverPanel.SetActive(true);
+    {   
         if (isWin)
             winText.text = "You won!";
         else
             winText.text = "You lost!";
-        OnGameOverButtonClicked();
+        gameOverPanel.SetActive(true);
     }
 
     public void OnGameOverButtonClicked()
     {
         SceneManager.LoadScene("GameSelectScene");
     }
-    
+
     public void ShowAlert(string message)
     {
         if (alertText == null) return;

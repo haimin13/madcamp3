@@ -339,20 +339,34 @@ public class ShogiView : MonoBehaviour
 
     public void ShowGameOver(bool isWin)
     {
-        if (model.GetPlayerId() == 1)
-        {
-            winGIF1.SetActive(true);
-            loseGIF1.SetActive(true);
-        }
-        else
-        {
-            winGIF2.SetActive(true);
-            loseGIF2.SetActive(true);
-        }
         if (isWin)
+        {
             winPanel.SetActive(true);
+            if (model.GetPlayerId() == 1)
+            {
+                winGIF1.SetActive(true);
+                winGIF1.GetComponent<GifEffect>()?.LoadFrames("win1");
+            }
+            else
+            {
+                winGIF2.SetActive(true);
+                winGIF2.GetComponent<GifEffect>()?.LoadFrames("win2");
+            }
+        }
         else
+        {
             losePanel.SetActive(true);
+            if (model.GetPlayerId() == 1)
+            {
+                loseGIF1.SetActive(true);
+                loseGIF1.GetComponent<GifEffect>()?.LoadFrames("lose1");
+            }
+            else
+            {
+                loseGIF2.SetActive(true);
+                loseGIF2.GetComponent<GifEffect>()?.LoadFrames("lose2");
+            }
+        }
     }
 
     public void OnGameOverButtonClicked()

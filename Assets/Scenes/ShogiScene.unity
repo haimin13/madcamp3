@@ -1048,7 +1048,7 @@ GameObject:
   m_Component:
   - component: {fileID: 678703734}
   - component: {fileID: 678703736}
-  - component: {fileID: 678703735}
+  - component: {fileID: 678703737}
   m_Layer: 5
   m_Name: LoseGif1
   m_TagString: Untagged
@@ -1064,7 +1064,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 678703733}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -5462.999}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 30, y: 30, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1075,19 +1075,6 @@ RectTransform:
   m_AnchoredPosition: {x: -0.00000011921, y: 113.99999}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &678703735
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 678703733}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c3f106a78e1aa142b294d8d1a41114b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Gif: {fileID: 11400000, guid: 6cec0060a7556334b9bbf66338c67694, type: 2}
 --- !u!212 &678703736
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1129,7 +1116,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 2a118e004c12c9e40a7830dde9f42d94, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1137,9 +1124,23 @@ SpriteRenderer:
   m_Size: {x: 13.3125, y: 7.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &678703737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 678703733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45bef81dd4aec1a4db549eaccc42a748, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frameDelay: 0.065
+  view: {fileID: 1919531980}
 --- !u!1 &686067292
 GameObject:
   m_ObjectHideFlags: 0
@@ -6534,7 +6535,7 @@ GameObject:
   m_Component:
   - component: {fileID: 913249446}
   - component: {fileID: 913249448}
-  - component: {fileID: 913249447}
+  - component: {fileID: 913249449}
   m_Layer: 5
   m_Name: WinGif2
   m_TagString: Untagged
@@ -6550,7 +6551,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 913249445}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -5462.9995}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 40, y: 40, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6561,19 +6562,6 @@ RectTransform:
   m_AnchoredPosition: {x: -0.00000011921, y: 114}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &913249447
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 913249445}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c3f106a78e1aa142b294d8d1a41114b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Gif: {fileID: 11400000, guid: fcfbcc0a98048514f9c029f952d6b19a, type: 2}
 --- !u!212 &913249448
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -6615,7 +6603,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 820b76f2f26d8124ca1090bef9ce3e19, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -6623,9 +6611,23 @@ SpriteRenderer:
   m_Size: {x: 13.3125, y: 7.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &913249449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 913249445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45bef81dd4aec1a4db549eaccc42a748, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frameDelay: 0.065
+  view: {fileID: 1919531980}
 --- !u!1 &1119745796
 GameObject:
   m_ObjectHideFlags: 0
@@ -6667,7 +6669,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1173096702}
   - component: {fileID: 1173096704}
-  - component: {fileID: 1173096703}
+  - component: {fileID: 1173096705}
   m_Layer: 5
   m_Name: LoseGif2
   m_TagString: Untagged
@@ -6683,7 +6685,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1173096701}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -5462.999}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 30, y: 30, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6694,19 +6696,6 @@ RectTransform:
   m_AnchoredPosition: {x: -0.00000011921, y: 113.99999}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1173096703
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1173096701}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c3f106a78e1aa142b294d8d1a41114b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Gif: {fileID: 11400000, guid: a71ecb7392263204ca3f325b7f13df51, type: 2}
 --- !u!212 &1173096704
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -6748,7 +6737,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 8b870c97a0a8b364d9a1a9b8db0c2761, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -6756,9 +6745,23 @@ SpriteRenderer:
   m_Size: {x: 13.3125, y: 7.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1173096705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1173096701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45bef81dd4aec1a4db549eaccc42a748, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frameDelay: 0.065
+  view: {fileID: 1919531980}
 --- !u!1 &1228285472
 GameObject:
   m_ObjectHideFlags: 0
@@ -6769,27 +6772,14 @@ GameObject:
   m_Component:
   - component: {fileID: 1228285475}
   - component: {fileID: 1228285474}
-  - component: {fileID: 1228285473}
+  - component: {fileID: 1228285476}
   m_Layer: 5
   m_Name: WinGif1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1228285473
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1228285472}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c3f106a78e1aa142b294d8d1a41114b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Gif: {fileID: 11400000, guid: 611fc7687f838ea4fa2f4c5d065d7abd, type: 2}
+  m_IsActive: 1
 --- !u!212 &1228285474
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -6831,7 +6821,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: d89642cc467ce2245978803a4f5e2fee, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -6839,7 +6829,7 @@ SpriteRenderer:
   m_Size: {x: 13.3125, y: 7.5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!224 &1228285475
@@ -6850,7 +6840,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1228285472}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -5462.9995}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 40, y: 40, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6861,6 +6851,20 @@ RectTransform:
   m_AnchoredPosition: {x: -0.00000011921, y: 114}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1228285476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228285472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45bef81dd4aec1a4db549eaccc42a748, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frameDelay: 0.065
+  view: {fileID: 1919531980}
 --- !u!1 &1400310004
 GameObject:
   m_ObjectHideFlags: 0
@@ -7536,7 +7540,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1787674051
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7917,7 +7921,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2000026124
 RectTransform:
   m_ObjectHideFlags: 0

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class ShogiAnimation : MonoBehaviour
 {
     public AnimationCurve easeCurve;
+    public AnimationCurve easeStart;
     public GameObject trailPrefab;
     public ShogiView view;
     public (List<int> from, List<int> to, string moveType)? GetMoveDelta(Piece[,] prev, Piece[,] curr)
@@ -93,17 +94,16 @@ public class ShogiAnimation : MonoBehaviour
 
         rect.anchoredPosition = end;
         yield return new WaitForSeconds(trailDuration);
-
-        // 애니메이션 완전히 끝나면 ShowPieces로 싱크
-        view.ShowPieces();
-        view.RemoveHighlights();
-        view.SetupCapturedPanels();
-        view.ShowCapturedPieces();
     }
-    public float EDiv(float a, float b, float backOff) {
-        //return (backOff*b-(1+backOff)*a)/()
-        return 1;
+    public Vector2 GetExternalDivisionPoint(Vector2 start, Vector2 end, float m, float n)
+    {
+        if (m != n)
+        {
+            return ((-n) * start + m * end) / (m - n);
+        }
+        else throw new System.ArgumentException("m=n");
     }
+    
     public IEnumerator AnimateCapture(List<int> from, List<int> to)
     {
         int fromX = from[0], fromY = from[1], toX = to[0], toY = to[1];
@@ -114,46 +114,49 @@ public class ShogiAnimation : MonoBehaviour
         Vector2 start = view.GetCellPos(fromX, fromY);
         Vector2 end = view.GetCellPos(toX, toY);
 
-        //Vector2 stopover = new Vector2(());
+        Vector2 stopover = GetExternalDivisionPoint(start, end, 1, 11);
 
         RectTransform rect = movingPiece.GetComponent<RectTransform>();
         movingPiece.transform.SetParent(view.boardRoot); // 보드 기준으로 위치 선정
         movingPiece.transform.SetAsLastSibling(); // 항상 최상위 레이어에!
+
+        Vector3 originalScale = Vector3.one;
+        Vector3 enlargedScale = new Vector3(1.2f, 1.2f, 1f);
 
         // first Anim
         float duration = 0.5f;
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            float t = easeCurve.Evaluate(elapsed / duration);
-            rect.anchoredPosition = Vector2.Lerp(start, end, t);
+            float t = easeStart.Evaluate(elapsed / duration);
+            rect.anchoredPosition = Vector2.Lerp(start, stopover, t);
+            rect.localScale = Vector3.Lerp(originalScale, enlargedScale, t); 
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
         // second Anim
-        duration = 0.5f;
+        duration = 0.8f;
         elapsed = 0f;
         while (elapsed < duration)
         {
+            float t = easeCurve.Evaluate(elapsed / duration);
+            rect.anchoredPosition = Vector2.Lerp(stopover, end, t);
+            rect.localScale = Vector3.Lerp(enlargedScale, originalScale, t);
 
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-
-        view.ShowPieces();
-        view.RemoveHighlights();
-        view.SetupCapturedPanels();
-        view.ShowCapturedPieces();
+        rect.anchoredPosition = end;
+        rect.localScale = originalScale;
         yield break;
     }
     public IEnumerator AnimateDrop(List<int> to)
     {
         int toX = to[0], toY = to[1];
-        view.ShowPieces();
-        view.RemoveHighlights();
-        view.SetupCapturedPanels();
-        view.ShowCapturedPieces();
+
         yield break;
     }
 
@@ -174,6 +177,7 @@ public class ShogiAnimation : MonoBehaviour
         if (img == null || img.gameObject == null || !img.gameObject.activeInHierarchy)
             yield break;
         img.color = endColor;
+        yield break;
     }
     // Start is called before the first frame update
     void Start()

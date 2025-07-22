@@ -8,6 +8,7 @@ public class ShogiAnimation : MonoBehaviour
     public AnimationCurve easeCurve;
     public AnimationCurve easeStart;
     public GameObject trailPrefab;
+    public GameObject shadowPrefab;
     public ShogiView view;
     public (List<int> from, List<int> to, string moveType)? GetMoveDelta(Piece[,] prev, Piece[,] curr)
     {
@@ -101,14 +102,6 @@ public class ShogiAnimation : MonoBehaviour
         view.SetupCapturedPanels();
         view.ShowCapturedPieces();
     }
-    public Vector2 GetExternalDivisionPoint(Vector2 start, Vector2 end, float m, float n)
-    {
-        if (m != n)
-        {
-            return ((-n) * start + m * end) / (m - n);
-        }
-        else throw new System.ArgumentException("m=n");
-    }
     
     public IEnumerator AnimateCapture(List<int> from, List<int> to)
     {
@@ -164,13 +157,53 @@ public class ShogiAnimation : MonoBehaviour
         view.ShowCapturedPieces();
         yield break;
     }
-    public IEnumerator AnimateDrop(List<int> to)
+    public IEnumerator AnimateDrop(List<int> to, Piece piece, int playerId)
     {
         int toX = to[0], toY = to[1];
 
+        // Creating new pieceObject
+        Vector2 end = view.GetCellPos(toX, toY);
+        // Vector2 start = end + new Vector2(view.cellSize, view.cellSize);
 
+        Transform parent = view.cellObjects[toX, toY].transform;
+        var pieceObj = Instantiate(view.piecePrefab, parent);
+        var pieceRt = pieceObj.GetComponent<RectTransform>();
+        var pieceSize = view.cellSize * 0.86f;
+        pieceRt.sizeDelta = new Vector2(pieceSize, pieceSize);
+        pieceRt.anchoredPosition = Vector2.zero;
+        pieceObj.SetActive(false);
+        view.pieceObjects[toX, toY] = pieceObj;
 
+        var shadowObj = Instantiate(shadowPrefab, parent);
+        var shadowRt = shadowObj.GetComponent<RectTransform>();
+        shadowRt.sizeDelta = new Vector2(view.cellSize, view.cellSize) * 0.9f;
+        shadowRt.anchoredPosition = Vector2.zero;
 
+        // 처음 크기 매우 작음
+        Vector3 shadowStartScale = new Vector3(0.1f, 0.1f, 1f);
+        Vector3 shadowEndScale = Vector3.one;
+        shadowRt.localScale = shadowStartScale;
+
+        float duration = 2f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float t = easeStart.Evaluate(elapsed / duration);
+            // 부드러운 확대(원한다면 가속도 등 곡선 적용 가능)
+            shadowRt.localScale = Vector3.Lerp(shadowStartScale, shadowEndScale, t);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        shadowRt.localScale = shadowEndScale;
+        Destroy(shadowObj);
+
+        pieceObj.SetActive(true);
+        var img = pieceObj.GetComponent<Image>();
+        img.sprite = view.GetSprite(piece.pieceType, piece.owner == playerId);
+        if (piece.owner != playerId)
+            img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 180f);
 
 
         view.ShowPieces();
@@ -197,6 +230,15 @@ public class ShogiAnimation : MonoBehaviour
         if (img == null || img.gameObject == null || !img.gameObject.activeInHierarchy)
             yield break;
         img.color = endColor;
+    }
+
+    public Vector2 GetExternalDivisionPoint(Vector2 start, Vector2 end, float m, float n)
+    {
+        if (m != n)
+        {
+            return ((-n) * start + m * end) / (m - n);
+        }
+        else throw new System.ArgumentException("m=n");
     }
     // Start is called before the first frame update
     void Start()

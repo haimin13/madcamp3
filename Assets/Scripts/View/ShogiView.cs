@@ -30,7 +30,7 @@ public class ShogiView : MonoBehaviour
 
     public Sprite wangMy, changMy, sangMy, jaMy, hooMy, wangTheir, changTheir, sangTheir, jaTheir, hooTheir; // 기물별 스프라이트
 
-    Sprite GetSprite(PieceType type, bool isMine)
+    public Sprite GetSprite(PieceType type, bool isMine)
     {
         switch(type)
         {
@@ -167,7 +167,7 @@ public class ShogiView : MonoBehaviour
 
             else if (moveType == "drop")
             {
-                StartCoroutine(anim.AnimateDrop(to));
+                StartCoroutine(anim.AnimateDrop(to, model.board[to[0], to[1]], model.GetPlayerId()));
                 return;
             }
         }

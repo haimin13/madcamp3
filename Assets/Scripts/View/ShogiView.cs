@@ -19,8 +19,12 @@ public class ShogiView : MonoBehaviour
     public GameObject myTurnPanel;    // 내 턴일 때 표시할 패널
     public GameObject opTurnPanel;    // 상대 턴일 때 표시할 패널
     public TextMeshProUGUI timeText;
-    public GameObject gameOverPanel;
-    public TextMeshProUGUI winText;
+    public GameObject winPanel;
+    public GameObject losePanel;
+    public GameObject winGIF1;
+    public GameObject winGIF2;
+    public GameObject loseGIF1;
+    public GameObject loseGIF2;
     public Button gameOverButton;
     public TextMeshProUGUI alertText;
     private bool boardCellsInitialized = false;
@@ -334,12 +338,21 @@ public class ShogiView : MonoBehaviour
     }
 
     public void ShowGameOver(bool isWin)
-    {   
-        if (isWin)
-            winText.text = "You won!";
+    {
+        if (model.GetPlayerId() == 1)
+        {
+            winGIF1.SetActive(true);
+            loseGIF1.SetActive(true);
+        }
         else
-            winText.text = "You lost!";
-        gameOverPanel.SetActive(true);
+        {
+            winGIF2.SetActive(true);
+            loseGIF2.SetActive(true);
+        }
+        if (isWin)
+            winPanel.SetActive(true);
+        else
+            losePanel.SetActive(true);
     }
 
     public void OnGameOverButtonClicked()
@@ -369,6 +382,8 @@ public class ShogiView : MonoBehaviour
     void Start()
     {
         gameOverButton.onClick.AddListener(OnGameOverButtonClicked);
+        winPanel.SetActive(false);
+        losePanel.SetActive(false);
     }
 
     // Update is called once per frame

@@ -94,6 +94,12 @@ public class ShogiAnimation : MonoBehaviour
 
         rect.anchoredPosition = end;
         yield return new WaitForSeconds(trailDuration);
+
+        // 애니메이션 완전히 끝나면 ShowPieces로 싱크
+        view.ShowPieces();
+        view.RemoveHighlights();
+        view.SetupCapturedPanels();
+        view.ShowCapturedPieces();
     }
     public Vector2 GetExternalDivisionPoint(Vector2 start, Vector2 end, float m, float n)
     {
@@ -151,12 +157,26 @@ public class ShogiAnimation : MonoBehaviour
 
         rect.anchoredPosition = end;
         rect.localScale = originalScale;
+
+        view.ShowPieces();
+        view.RemoveHighlights();
+        view.SetupCapturedPanels();
+        view.ShowCapturedPieces();
         yield break;
     }
     public IEnumerator AnimateDrop(List<int> to)
     {
         int toX = to[0], toY = to[1];
 
+
+
+
+
+
+        view.ShowPieces();
+        view.RemoveHighlights();
+        view.SetupCapturedPanels();
+        view.ShowCapturedPieces();
         yield break;
     }
 
@@ -177,7 +197,6 @@ public class ShogiAnimation : MonoBehaviour
         if (img == null || img.gameObject == null || !img.gameObject.activeInHierarchy)
             yield break;
         img.color = endColor;
-        yield break;
     }
     // Start is called before the first frame update
     void Start()

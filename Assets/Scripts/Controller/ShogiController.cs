@@ -184,14 +184,14 @@ public class ShogiController : MonoBehaviour
                 model.movablePositions = null;
                 model.selectedCapturedPiece = null;
                 view.RemoveHighlights();
+                view.ShowBoard();
 
-                StartCoroutine(ShowBoardThenAfter(() =>
+                if (res.is_end)
                 {
-                    if (res.is_end)
-                        GameOver(res.winner);
-                    else
-                        ChangeTurn(false);
-                }));
+                    GameOver(res.winner);
+                }
+                else
+                    ChangeTurn(false); // 턴 넘기고 폴링
             }
         }, (error) => {Debug.Log(error); }));
     }
@@ -229,13 +229,14 @@ public class ShogiController : MonoBehaviour
                 model.movablePositions = null;
                 model.selectedCapturedPiece = null;
                 view.RemoveHighlights();
-                StartCoroutine(ShowBoardThenAfter(() =>
+                view.ShowBoard();
+
+                if (res.is_end)
                 {
-                    if (res.is_end)
-                        GameOver(res.winner);
-                    else
-                        ChangeTurn(false);
-                }));
+                    GameOver(res.winner);
+                }
+                else
+                    ChangeTurn(false);
             }
         },(error) => {Debug.Log(error);}));
     }
@@ -363,6 +364,7 @@ public class ShogiController : MonoBehaviour
                             model.board[toX, toY] = movedPiece;
                             model.board[fromX, fromY] = model.CreateEmptyPiece();
                             DebugBoard();
+                            view.ShowBoard();
                         }
                         else // 상대 말 드롭
                         {
@@ -382,25 +384,23 @@ public class ShogiController : MonoBehaviour
 
                             model.playersInfo[model.GetAdversaryId()].capturedPieces.Remove(droppedPiece);
                             DebugBoard();
+                            view.ShowBoard();
                         }
                     }
                     else Debug.Log("상대 말에 변화안함!");
-                    StartCoroutine(ShowBoardThenAfter(() =>
+                    if (res.is_end)
                     {
-                        if (res.is_end)
-                            GameOver(res.winner);
-                        else
-                            ChangeTurn(false);
-                    }));
+                        GameOver(res.winner);
+                        yield break;
+                    }
+                    else
+                    {
+                        ChangeTurn(true);
+                        yield break;
+                    }
                 }
             }
         }
-    }
-
-    private IEnumerator ShowBoardThenAfter(System.Action callback)
-    {
-        yield return StartCoroutine(view.ShowBoardRoutine());
-        callback?.Invoke();
     }
 
     // 타이머 코루틴: 1초마다 timeLeft 감소, 시간초과 처리

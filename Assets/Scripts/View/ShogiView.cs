@@ -144,50 +144,33 @@ public class ShogiView : MonoBehaviour
             }
     }
 
-    public IEnumerator ShowBoardRoutine()
-    {
-        if (!boardCellsInitialized)
-            InitBoardCells();
-
-        var moveDelta = anim.GetMoveDelta(model.prevBoard, model.board);
-        if (moveDelta.HasValue)
-        {
-            var (from, to, moveType) = moveDelta.Value;
-
-            if (moveType == "move")
-            {
-                yield return StartCoroutine(anim.AnimateMove(from, to));
-            }
-            else if (moveType == "caught")
-            {
-                yield return StartCoroutine(anim.AnimateCapture(from, to));
-            }
-            else if (moveType == "drop")
-            {
-                yield return StartCoroutine(anim.AnimateDrop(to));
-            }
-        }
-        else
-        {
-            // 애니메이션이 없으면 바로 UI 갱신
-            ShowPieces();
-            RemoveHighlights();
-            SetupCapturedPanels();
-            ShowCapturedPieces();
-            yield break;
-        }
-
-        // 애니메이션이 끝났으면 UI 갱신
-        ShowPieces();
-        RemoveHighlights();
-        SetupCapturedPanels();
-        ShowCapturedPieces();
-    }
+    
     public void ShowBoard()
     {
         if (!boardCellsInitialized)
             InitBoardCells();
+        // animation 먼저 보여주기
+        var moveDelta = anim.GetMoveDelta(model.prevBoard, model.board);
+        if (moveDelta.HasValue)
+        {
+            var (from, to, moveType) = moveDelta.Value;
+            if (moveType == "move")
+            {
+                StartCoroutine(anim.AnimateMove(from, to));
+                return;
+            }
+            else if (moveType == "caught")
+            {
+                StartCoroutine(anim.AnimateCapture(from, to));
+                return;
+            }
 
+            else if (moveType == "drop")
+            {
+                StartCoroutine(anim.AnimateDrop(to));
+                return;
+            }
+        }
         ShowPieces();
         RemoveHighlights();
         SetupCapturedPanels();

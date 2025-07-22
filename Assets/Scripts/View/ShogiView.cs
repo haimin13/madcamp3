@@ -12,6 +12,7 @@ public class ShogiView : MonoBehaviour
     public Transform boardRoot;          // 보드 전체의 부모 오브젝트
     public ShogiModel model;
     public ShogiController controller;
+    public ShogiAnimation anim;
     public RectTransform myCapturedPanel;
     public RectTransform opponentCapturedPanel;
     public GameObject capturedPieceIconPrefab;
@@ -23,8 +24,8 @@ public class ShogiView : MonoBehaviour
     public Button gameOverButton;
     public TextMeshProUGUI alertText;
     private bool boardCellsInitialized = false;
-    private GameObject[,] cellObjects;
-    private GameObject[,] pieceObjects;
+    public GameObject[,] cellObjects;
+    public GameObject[,] pieceObjects;
     public float cellSize = 140f;
 
     public Sprite wangMy, changMy, sangMy, jaMy, hooMy, wangTheir, changTheir, sangTheir, jaTheir, hooTheir; // 기물별 스프라이트
@@ -149,93 +150,31 @@ public class ShogiView : MonoBehaviour
         if (!boardCellsInitialized)
             InitBoardCells();
         // animation 먼저 보여주기
-        // var moveDelta = GetMoveDelta(model.prevBoard, model.board);
-        // if (moveDelta.HasValue)
-        // {
-        //     var (from, to, moveType) = moveDelta.Value;
-        //     if (moveType == "move")
-        //         AnimateMove(from, to);
-        //     else if (moveType == "caught")
-        //         AnimateCapture(from, to);
-        //     else if (moveType == "drop")
-        //         AnimateDrop(to);
-        // }
-
-        ShowPieces();
-        RemoveHighlights();
-        SetupCapturedPanels();
-        ShowCapturedPieces();
-    }
-    public (List<int> from, List<int> to, string moveType)? GetMoveDelta(Piece[,] prev, Piece[,] curr)
-    {
-        if (prev == null) return null;
-
-        List<int> from = null, to = null;
-        string moveType = "";
-        int width = prev.GetLength(0), height = prev.GetLength(1);
-
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
-            {
-                Piece prevPiece = prev[x, y];
-                Piece curPiece = curr[x, y];
-                if (prevPiece.owner != curPiece.owner)
-                {
-                    if (curPiece.owner != 0) // 01 02 12 21
-                    {
-                        to = new List<int> { x, y };
-                        if (prevPiece.owner != 0) // 12 21
-                            moveType = "caught";
-                        else // 01 02
-                            moveType = "move";
-                    }
-                    else // 10 20
-                        from = new List<int>{ x, y };
-                }
-            }
-        if (from == null)
-            moveType = "drop";
-        if (to != null)
-            return (from, to, moveType);
-        return null;
-    }
-
-    public IEnumerator AnimateMove(List<int> from, List<int> to)
-    {
-        int fromX = from[0], fromY = from[1], toX = to[0], toY = to[1];
-        float duration = 0.4f;
-        GameObject movingPiece = pieceObjects[fromX, fromY];
-        if (movingPiece == null) yield break;
-
-        Vector2 start = GetCellPos(fromX, fromY);
-        Vector2 end = GetCellPos(toX, toY);
-
-        RectTransform rect = movingPiece.GetComponent<RectTransform>();
-        movingPiece.transform.SetParent(boardRoot); // 보드 기준으로 위치 선정
-
-        float elapsed = 0f;
-        while (elapsed < duration)
+        var moveDelta = anim.GetMoveDelta(model.prevBoard, model.board);
+        if (moveDelta.HasValue)
         {
-            rect.anchoredPosition = Vector2.Lerp(start, end, elapsed / duration);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-        rect.anchoredPosition = end;
+            var (from, to, moveType) = moveDelta.Value;
+            if (moveType == "move")
+            {
+                StartCoroutine(anim.AnimateMove(from, to));
+                return;
+            }
+            // else if (moveType == "caught")
+            // {
+            //     StartCoroutine(anim.AnimateCapture(from, to));
+            //     return;
+            // }
 
-        // 애니메이션 완전히 끝나면 ShowPieces로 싱크
+            // else if (moveType == "drop")
+            // {
+            //     StartCoroutine(anim.AnimateDrop(to));
+            //     return;
+            // }
+        }
         ShowPieces();
         RemoveHighlights();
         SetupCapturedPanels();
         ShowCapturedPieces();
-
-    }
-    public void AnimateCapture(List<int> from, List<int> to)
-    {
-        int fromX = from[0], fromY = from[1], toX = to[0], toY = to[1];
-    }
-    public void AnimateDrop(List<int> to)
-    {
-        int toX = to[0], toY = to[1];
     }
 
     public Vector2 GetCellPos(int x, int y)
@@ -297,7 +236,7 @@ public class ShogiView : MonoBehaviour
         }
     }
     
-    void ShowCapturedPieces()
+    public void ShowCapturedPieces()
     {
         int playerId = model.GetPlayerId();
         int adversaryId = playerId == 1 ? 2 : 1;
@@ -356,7 +295,7 @@ public class ShogiView : MonoBehaviour
     }
 
 
-    void SetupCapturedPanels()
+    public void SetupCapturedPanels()
     {
         // int playerId = model.GetPlayerId();
 

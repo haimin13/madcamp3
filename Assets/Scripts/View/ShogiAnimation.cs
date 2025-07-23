@@ -7,7 +7,6 @@ public class ShogiAnimation : MonoBehaviour
 {
     public AudioClip drop; // Inspector에서 효과음 할당
     public AudioClip capture1;
-    public AudioClip capture2;
     public AudioClip chack;
     public AudioSource audioSource; // 효과음을 재생할 오디오 소스
     public AnimationCurve easeCurve;
@@ -82,8 +81,6 @@ public class ShogiAnimation : MonoBehaviour
         float elapsed = 0f;
         float trailDuration = 0.5f;
 
-        if (audioSource != null && chack != null)
-            audioSource.PlayOneShot(chack); // 애니메이션 시작과 동시에 재생
         while (elapsed < duration)
         {
             float t = easeCurve.Evaluate(elapsed / duration);
@@ -111,6 +108,9 @@ public class ShogiAnimation : MonoBehaviour
             elapsed += Time.deltaTime;
             yield return null;
         }
+
+        if (audioSource != null && chack != null)
+            audioSource.PlayOneShot(chack); // 애니메이션 시작과 동시에 재생
 
         rect.anchoredPosition = end;
 
@@ -192,8 +192,6 @@ public class ShogiAnimation : MonoBehaviour
         // second Anim
         duration = 0.8f;
         elapsed = 0f;
-        if (audioSource != null && capture2 != null)
-            audioSource.PlayOneShot(capture2); // 애니메이션 시작과 동시에 재생
         while (elapsed < duration)
         {
             float t = easeCurve.Evaluate(elapsed / duration);

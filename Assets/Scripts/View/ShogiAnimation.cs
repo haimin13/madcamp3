@@ -10,6 +10,7 @@ public class ShogiAnimation : MonoBehaviour
     public GameObject trailPrefab;
     public GameObject shadowPrefab;
     public GameObject chackPrefab;
+    public GameObject debrisPrefab;
     public ShogiView view;
     public (List<int> from, List<int> to, string moveType)? GetMoveDelta(Piece[,] prev, Piece[,] curr)
     {
@@ -193,6 +194,18 @@ public class ShogiAnimation : MonoBehaviour
         rect.anchoredPosition = end;
         rect.localScale = originalScale;
 
+        // 잔상 파티클 생성 & siblingIndex 조절
+        if (debrisPrefab != null)
+        {
+            GameObject particle = GameObject.Instantiate(debrisPrefab, view.boardRoot);
+            RectTransform particleRect = particle.GetComponent<RectTransform>();
+            particleRect.anchoredPosition = end;
+            particleRect.sizeDelta = rect.sizeDelta;
+
+
+            GameObject.Destroy(particle, 1.0f); // 1초 뒤 자동 파괴
+        }
+
         AfterAnimation();
         yield break;
     }
@@ -223,7 +236,7 @@ public class ShogiAnimation : MonoBehaviour
         Vector3 shadowEndScale = Vector3.one;
         shadowRt.localScale = shadowStartScale;
 
-        float duration = 2f;
+        float duration = 1f;
         float elapsed = 0f;
 
         while (elapsed < duration)

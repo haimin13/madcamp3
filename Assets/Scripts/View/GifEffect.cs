@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class GifEffect : MonoBehaviour
 {
     private Sprite[] frames;     // GIF 프레임으로 사용할 스프라이트 배열
-    [SerializeField] private float frameDelay = 0.05f; // 프레임 간 딜레이 (초)
+    [SerializeField] private float frameDelay = 0.065f; // 프레임 간 딜레이 (초)
     private int index = 0;
     private float timer = 0;
     public ShogiView view;

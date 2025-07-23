@@ -232,11 +232,11 @@ public class ShogiAnimation : MonoBehaviour
         shadowRt.anchoredPosition = Vector2.zero;
 
         // 처음 크기 매우 작음
-        Vector3 shadowStartScale = new Vector3(0.1f, 0.1f, 1f);
+        Vector3 shadowStartScale = new Vector3(0.2f, 0.2f, 1f);
         Vector3 shadowEndScale = Vector3.one;
         shadowRt.localScale = shadowStartScale;
 
-        float duration = 1f;
+        float duration = 0.8f;
         float elapsed = 0f;
 
         while (elapsed < duration)

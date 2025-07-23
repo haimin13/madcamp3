@@ -24,10 +24,11 @@ public class GifEffect : MonoBehaviour
         timer += Time.deltaTime;
         if (timer >= frameDelay)
         {
-            index = (index + 1) % frames.Length;
+            int skipCount = (int)(timer / frameDelay); // 만약에 너무 빨라 여러 프레임이 지난 경우 한 번에 건너뜀
+            index = (index + skipCount) % frames.Length;
             if (spriteRenderer != null) spriteRenderer.sprite = frames[index];
             else if (uiImage != null) uiImage.sprite = frames[index];
-            timer = 0;
+            timer -= frameDelay * skipCount;
         }
     }
     
@@ -40,9 +41,5 @@ public class GifEffect : MonoBehaviour
 
         index = 0;
         timer = 0;
-
-        // 첫 프레임 즉시 적용 (필요 시)
-        if(spriteRenderer != null && frames.Length > 0) spriteRenderer.sprite = frames[0];
-        else if(uiImage != null && frames.Length > 0) uiImage.sprite = frames[0];
     }
 }

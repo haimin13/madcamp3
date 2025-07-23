@@ -294,6 +294,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7726b63ec0d5ca548a02bebd0529c9b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  audioSource: {fileID: 990061185}
+  clickSound: {fileID: 8300000, guid: 6c00e92f2eb90d645aa766df0347c4e1, type: 3}
   loginButton: {fileID: 999489583}
   userNameInput: {fileID: 962050002}
   apiRequester: {fileID: 978228385}
@@ -783,7 +785,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 6c00e92f2eb90d645aa766df0347c4e1, type: 3}
+  m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1

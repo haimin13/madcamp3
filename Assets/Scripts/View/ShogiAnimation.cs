@@ -9,6 +9,7 @@ public class ShogiAnimation : MonoBehaviour
     public AnimationCurve easeStart;
     public GameObject trailPrefab;
     public GameObject shadowPrefab;
+    public GameObject chackPrefab;
     public ShogiView view;
     public (List<int> from, List<int> to, string moveType)? GetMoveDelta(Piece[,] prev, Piece[,] curr)
     {
@@ -108,7 +109,7 @@ public class ShogiAnimation : MonoBehaviour
         elapsed = 0f;
         // while (elapsed < duration)
         // {
-            
+        //     GameObject chack = Instantiate(chackPrefab)
         // }
 
         yield return new WaitForSeconds(trailDuration);

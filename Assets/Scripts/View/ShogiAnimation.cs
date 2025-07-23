@@ -10,6 +10,8 @@ public class ShogiAnimation : MonoBehaviour
     public GameObject trailPrefab;
     public GameObject shadowPrefab;
     public GameObject chackPrefab;
+    public GameObject debrisPrefab;
+    public GameObject dropPrefab;
     public ShogiView view;
     public (List<int> from, List<int> to, string moveType)? GetMoveDelta(Piece[,] prev, Piece[,] curr)
     {
@@ -108,14 +110,14 @@ public class ShogiAnimation : MonoBehaviour
         Vector2 pos = view.GetCellPos(to[0], to[1]);
         Vector2 startSize = rect.sizeDelta; // 현재 piece 사이즈
 
-        yield return StartCoroutine(PlayScaleFadeEffect(chackPrefab, view.boardRoot, pos, startSize, 0.3f));
+        yield return StartCoroutine(PlayScaleFadeEffect(chackPrefab, view.boardRoot, pos, startSize, 0.3f, 2f));
 
 
         yield return new WaitForSeconds(trailDuration);
 
         AfterAnimation();
     }
-    public IEnumerator PlayScaleFadeEffect(GameObject effectPrefab, Transform parent, Vector2 anchoredPos, Vector2 startSize, float duration)
+    public IEnumerator PlayScaleFadeEffect(GameObject effectPrefab, Transform parent, Vector2 anchoredPos, Vector2 startSize, float duration, float enlarge)
     {
         GameObject effect = Instantiate(effectPrefab, parent);
         RectTransform rt = effect.GetComponent<RectTransform>();
@@ -131,7 +133,7 @@ public class ShogiAnimation : MonoBehaviour
             float t = elapsed / duration;
 
             // 크기 점점 키우기 (0 ~ 1.5배 예)
-            rt.sizeDelta = Vector2.Lerp(startSize, startSize * 1.5f, t);
+            rt.sizeDelta = Vector2.Lerp(startSize, startSize * enlarge, t);
 
             // 알파는 점점 0으로 줄이기
             img.color = Color.Lerp(startColor, new Color(startColor.r, startColor.g, startColor.b, 0f), t);
@@ -160,6 +162,7 @@ public class ShogiAnimation : MonoBehaviour
         RectTransform rect = movingPiece.GetComponent<RectTransform>();
         movingPiece.transform.SetParent(view.boardRoot); // 보드 기준으로 위치 선정
         movingPiece.transform.SetAsLastSibling(); // 항상 최상위 레이어에!
+        int movingPieceIndex = rect.GetSiblingIndex();
 
         Vector3 originalScale = Vector3.one;
         Vector3 enlargedScale = new Vector3(1.2f, 1.2f, 1f);
@@ -193,6 +196,28 @@ public class ShogiAnimation : MonoBehaviour
         rect.anchoredPosition = end;
         rect.localScale = originalScale;
 
+        // 잔상 파티클 생성 & siblingIndex 조절
+        GameObject particle = null;
+        if (debrisPrefab != null)
+        {
+            particle = GameObject.Instantiate(debrisPrefab, view.boardRoot);
+            if (movingPieceIndex > 0)
+                particle.transform.SetSiblingIndex(movingPieceIndex);   // piece 바로 아래로!
+            else
+                particle.transform.SetAsFirstSibling(); // 맨 아래로
+            RectTransform particleRect = particle.GetComponent<RectTransform>();
+            particleRect.anchoredPosition = end;
+            particleRect.sizeDelta = rect.sizeDelta;
+            
+
+
+            GameObject.Destroy(particle, 1.0f); // 1초 뒤 자동 파괴
+        }
+        if (particle != null)
+        {
+            yield return new WaitForSeconds(1.0f);
+        }
+
         AfterAnimation();
         yield break;
     }
@@ -219,11 +244,11 @@ public class ShogiAnimation : MonoBehaviour
         shadowRt.anchoredPosition = Vector2.zero;
 
         // 처음 크기 매우 작음
-        Vector3 shadowStartScale = new Vector3(0.1f, 0.1f, 1f);
+        Vector3 shadowStartScale = new Vector3(0.2f, 0.2f, 1f);
         Vector3 shadowEndScale = Vector3.one;
         shadowRt.localScale = shadowStartScale;
 
-        float duration = 2f;
+        float duration = 0.8f;
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -243,7 +268,13 @@ public class ShogiAnimation : MonoBehaviour
         img.sprite = view.GetSprite(piece.pieceType, piece.owner == playerId);
         if (piece.owner != playerId)
             img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 180f);
+        
+        Vector2 pos = view.GetCellPos(to[0], to[1]);
+        Vector2 startSize = pieceRt.sizeDelta; // 현재 piece 사이즈
 
+        yield return StartCoroutine(PlayScaleFadeEffect(dropPrefab, view.boardRoot, pos, startSize*1.3f, 0.7f, 1.5f));
+
+        yield return new WaitForSeconds(1.5f);
 
         AfterAnimation();
         yield break;

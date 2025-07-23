@@ -5,6 +5,11 @@ using UnityEngine.UI;
 
 public class ShogiAnimation : MonoBehaviour
 {
+    public AudioClip drop; // Inspector에서 효과음 할당
+    public AudioClip capture1;
+    public AudioClip capture2;
+    public AudioClip chack;
+    public AudioSource audioSource; // 효과음을 재생할 오디오 소스
     public AnimationCurve easeCurve;
     public AnimationCurve easeStart;
     public GameObject trailPrefab;
@@ -77,6 +82,8 @@ public class ShogiAnimation : MonoBehaviour
         float elapsed = 0f;
         float trailDuration = 0.5f;
 
+        if (audioSource != null && chack != null)
+            audioSource.PlayOneShot(chack); // 애니메이션 시작과 동시에 재생
         while (elapsed < duration)
         {
             float t = easeCurve.Evaluate(elapsed / duration);
@@ -170,6 +177,8 @@ public class ShogiAnimation : MonoBehaviour
         // first Anim
         float duration = 0.5f;
         float elapsed = 0f;
+        if (audioSource != null && capture1 != null)
+            audioSource.PlayOneShot(capture1); // 애니메이션 시작과 동시에 재생
         while (elapsed < duration)
         {
             float t = easeStart.Evaluate(elapsed / duration);
@@ -183,6 +192,8 @@ public class ShogiAnimation : MonoBehaviour
         // second Anim
         duration = 0.8f;
         elapsed = 0f;
+        if (audioSource != null && capture2 != null)
+            audioSource.PlayOneShot(capture2); // 애니메이션 시작과 동시에 재생
         while (elapsed < duration)
         {
             float t = easeCurve.Evaluate(elapsed / duration);
@@ -272,7 +283,10 @@ public class ShogiAnimation : MonoBehaviour
         Vector2 pos = view.GetCellPos(to[0], to[1]);
         Vector2 startSize = pieceRt.sizeDelta; // 현재 piece 사이즈
 
-        yield return StartCoroutine(PlayScaleFadeEffect(dropPrefab, view.boardRoot, pos, startSize*1.3f, 0.7f, 1.5f));
+        if (audioSource != null && drop != null)
+            audioSource.PlayOneShot(drop); // 애니메이션 시작과 동시에 재생
+
+        yield return StartCoroutine(PlayScaleFadeEffect(dropPrefab, view.boardRoot, pos, startSize * 1.3f, 0.7f, 1.5f));
 
         yield return new WaitForSeconds(1.5f);
 

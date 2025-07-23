@@ -13,6 +13,8 @@ public class LoginResponse {
 }
 public class StartSceneManager : MonoBehaviour
 {
+    public AudioSource audioSource;
+    public AudioClip clickSound;
     public Button loginButton;
     public TMP_InputField userNameInput;
     public APIRequester apiRequester;
@@ -34,6 +36,8 @@ public class StartSceneManager : MonoBehaviour
     }
     public void OnLoginButtonClicked()
     {
+        if (audioSource != null && clickSound != null)
+            audioSource.PlayOneShot(clickSound); // 애니메이션 시작과 동시에 재생
         // 입력 값 가져오기 (정수/문자 변환 주의)
         string userName = userNameInput.text.Trim();
         CreateUser(userName);

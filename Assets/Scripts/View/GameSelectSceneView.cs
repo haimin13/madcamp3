@@ -6,6 +6,9 @@ using TMPro;
 
 public class GameSelectSceneView : MonoBehaviour
 {
+
+    public AudioSource audioSource;
+    public AudioClip clickSound;
     public GameSelectSceneController controller;
     public GameDataModel model;
 
@@ -127,11 +130,15 @@ public class GameSelectSceneView : MonoBehaviour
 
     public void OnCloseLobbyClicked()
     {
+        if (audioSource != null && clickSound != null)
+            audioSource.PlayOneShot(clickSound); // 애니메이션 시작과 동시에 재생
         controller.CloseLobby();
         lobbyPanel.SetActive(false);
     }
     public void OnCloseCEClicked()
     {
+        if (audioSource != null && clickSound != null)
+            audioSource.PlayOneShot(clickSound); // 애니메이션 시작과 동시에 재생
         Debug.Log("ceclose");
         controller.CloseRoom();
         createRoomPanel.SetActive(false);

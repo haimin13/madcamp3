@@ -7,6 +7,8 @@ using TMPro;
 
 public class ShogiView : MonoBehaviour
 {
+    public AudioSource audioSource;
+    public AudioClip clicksound;
     public GameObject cellPrefab;        // 셀 프리팹 (스프라이트 or 사각형)
     public GameObject piecePrefab;       // 기물 프리팹 (스프라이트렌더러 포함)
     public Transform boardRoot;          // 보드 전체의 부모 오브젝트
@@ -373,9 +375,18 @@ public class ShogiView : MonoBehaviour
 
     public void OnGameOverButtonClicked()
     {
+        if (audioSource != null && clicksound != null)
+            audioSource.PlayOneShot(clicksound); // 애니메이션 시작과 동시에 재생
         ShowAlert("go to lobby");
+        StartCoroutine(DelayLoadScene());
+        
+    }
+    private IEnumerator DelayLoadScene()
+    {
+        yield return new WaitForSeconds(1f); // 1초 대기
         SceneManager.LoadScene("GameSelectScene");
     }
+    
 
     public void ShowAlert(string message)
     {

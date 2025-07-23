@@ -354,8 +354,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   drop: {fileID: 8300000, guid: e552380b18fc8094ba11134218322345, type: 3}
-  capture1: {fileID: 8300000, guid: 0bd082a4f620d1a46b6f7efd249f982e, type: 3}
-  capture2: {fileID: 8300000, guid: 8e18599f2b5bd84488e2cf7171f91ef4, type: 3}
+  capture1: {fileID: 8300000, guid: eccc297b6d484e64b920ffc14f6696cc, type: 3}
   chack: {fileID: 8300000, guid: 0f9585287e05a0e4dbac579b31dda2b3, type: 3}
   audioSource: {fileID: 1054705959}
   easeCurve:

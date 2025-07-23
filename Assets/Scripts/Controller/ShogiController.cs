@@ -460,6 +460,7 @@ public class ShogiController : MonoBehaviour
             if (res.result)
                 if (res.is_end)
                     GameOver(res.winner);
+                    view.ShowBoard();
         }, (error)=>
         {
             Debug.Log(error);

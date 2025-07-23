@@ -31,7 +31,7 @@ public class CellView : MonoBehaviour, IPointerClickHandler
         if (cellImage == null) return;
 
         if (on)
-            cellImage.color = new Color(0f, 0.5f, 1f, 0.5f); // 원하는 하이라이트 색상
+            cellImage.color = new Color(0.7f, 0.7f, 1f, 1f); // 원하는 하이라이트 색상
         else
             cellImage.color = originalColor; // 원래 색상으로 복구
     }

@@ -156,6 +156,9 @@ public class ShogiController : MonoBehaviour
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
             {
+                if (res.is_end)
+                    GameOver(res.winner);
+
                 SavePrevBoard();
                 Piece sourcePiece = model.board[fromX, fromY];
                 Piece movedPiece = new Piece
@@ -185,12 +188,8 @@ public class ShogiController : MonoBehaviour
                 model.selectedCapturedPiece = null;
                 view.RemoveHighlights();
                 view.ShowBoard();
-
-                if (res.is_end)
-                {
-                    GameOver(res.winner);
-                }
-                else
+                
+                if (!res.is_end)
                     ChangeTurn(false); // 턴 넘기고 폴링
             }
         }, (error) => {Debug.Log(error); }));
@@ -212,6 +211,9 @@ public class ShogiController : MonoBehaviour
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
             {
+                if (res.is_end)
+                    GameOver(res.winner);
+
                 SavePrevBoard();
                 Piece droppedPiece = model.selectedCapturedPiece;
                 Piece newPiece = new Piece
@@ -231,11 +233,7 @@ public class ShogiController : MonoBehaviour
                 view.RemoveHighlights();
                 view.ShowBoard();
 
-                if (res.is_end)
-                {
-                    GameOver(res.winner);
-                }
-                else
+                if (!res.is_end)
                     ChangeTurn(false);
             }
         },(error) => {Debug.Log(error);}));
@@ -247,10 +245,17 @@ public class ShogiController : MonoBehaviour
             view.ShowAlert("Not your turn!");
             return;
         }
+        if (piece.owner == model.GetPlayerId())
+        {
+            view.ShowAlert("Not your piece!");
+            view.RemoveHighlights();
+            return;
+        }
         if (model.selectedCapturedPiece != null && model.selectedCapturedPiece == piece)
         {
             model.selectedCapturedPiece = null;
             model.movablePositions = null;
+            view.RemoveHighlights();
             return;
         }
         else
@@ -296,7 +301,7 @@ public class ShogiController : MonoBehaviour
             // view.HighlightMovableCells(moves);
         }));
     }
-    // 폴링 루프: 3초마다 내 턴인지 확인 (내 턴이 오면 코루틴 종료, 입력 허용)
+    // 폴링 루프: 1초마다 내 턴인지 확인 (내 턴이 오면 코루틴 종료, 입력 허용)
     IEnumerator TurnPollingRoutine()
     {
         while (true)
@@ -323,6 +328,9 @@ public class ShogiController : MonoBehaviour
             {
                 if (res.turn)
                 {
+                    if (res.is_end)
+                        GameOver(res.winner);
+
                     if (res.op_position != null && res.op_position.to != null)
                     {
                         SavePrevBoard();
@@ -360,7 +368,7 @@ public class ShogiController : MonoBehaviour
                                 owner = sourcePiece.owner,
                                 stayedTurns = 0
                             };
-                            
+
                             model.board[toX, toY] = movedPiece;
                             model.board[fromX, fromY] = model.CreateEmptyPiece();
                             DebugBoard();
@@ -388,16 +396,10 @@ public class ShogiController : MonoBehaviour
                         }
                     }
                     else Debug.Log("상대 말에 변화안함!");
-                    if (res.is_end)
-                    {
-                        GameOver(res.winner);
-                        yield break;
-                    }
-                    else
-                    {
+                    if (!res.is_end)
                         ChangeTurn(true);
-                        yield break;
-                    }
+                    
+                    yield break;
                 }
             }
         }
@@ -473,12 +475,11 @@ public class ShogiController : MonoBehaviour
 
     public void GameOver(int winner)
     {
-        view.ShowBoard();
         if (timerCoroutine != null) StopCoroutine(timerCoroutine);
         timerCoroutine = null;
 
         model.isWin = winner == model.GetPlayerId();
-        view.ShowGameOver(model.isWin);
+        model.isEnd = true;
     }
 
     public void DebugBoard()

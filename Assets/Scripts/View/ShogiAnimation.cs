@@ -44,6 +44,15 @@ public class ShogiAnimation : MonoBehaviour
         return null;
     }
 
+    public void AfterAnimation()
+    {
+        view.ShowPieces();
+        view.RemoveHighlights();
+        view.SetupCapturedPanels();
+        view.ShowCapturedPieces();
+        view.ShowGameOver();
+    }
+
     public IEnumerator AnimateMove(List<int> from, List<int> to)
     {
         int fromX = from[0], fromY = from[1], toX = to[0], toY = to[1];
@@ -94,13 +103,17 @@ public class ShogiAnimation : MonoBehaviour
         }
 
         rect.anchoredPosition = end;
+
+        duration = 0.3f;
+        elapsed = 0f;
+        // while (elapsed < duration)
+        // {
+            
+        // }
+
         yield return new WaitForSeconds(trailDuration);
 
-        // 애니메이션 완전히 끝나면 ShowPieces로 싱크
-        view.ShowPieces();
-        view.RemoveHighlights();
-        view.SetupCapturedPanels();
-        view.ShowCapturedPieces();
+        AfterAnimation();
     }
     
     public IEnumerator AnimateCapture(List<int> from, List<int> to)
@@ -151,10 +164,7 @@ public class ShogiAnimation : MonoBehaviour
         rect.anchoredPosition = end;
         rect.localScale = originalScale;
 
-        view.ShowPieces();
-        view.RemoveHighlights();
-        view.SetupCapturedPanels();
-        view.ShowCapturedPieces();
+        AfterAnimation();
         yield break;
     }
     public IEnumerator AnimateDrop(List<int> to, Piece piece, int playerId)
@@ -206,10 +216,7 @@ public class ShogiAnimation : MonoBehaviour
             img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 180f);
 
 
-        view.ShowPieces();
-        view.RemoveHighlights();
-        view.SetupCapturedPanels();
-        view.ShowCapturedPieces();
+        AfterAnimation();
         yield break;
     }
 

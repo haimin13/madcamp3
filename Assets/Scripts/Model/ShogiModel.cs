@@ -31,6 +31,7 @@ public class ShogiModel : MonoBehaviour
     private int sessionId;
     public bool myTurn;
     public bool isWin = false;
+    public bool isEnd = false;
     public int timeLimit = 90;
     public int timeLeft;
     public List<int> selectedPosition;

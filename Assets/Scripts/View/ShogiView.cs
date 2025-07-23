@@ -25,7 +25,7 @@ public class ShogiView : MonoBehaviour
     public GameObject winGIF2;
     public GameObject loseGIF1;
     public GameObject loseGIF2;
-    public Button gameOverButton;
+    public List<Button> gameOverButtons;
     public TextMeshProUGUI alertText;
     private bool boardCellsInitialized = false;
     public GameObject[,] cellObjects;
@@ -333,13 +333,15 @@ public class ShogiView : MonoBehaviour
 
     public void OnCapturedPieceClicked(Piece piece)
     {
-        RemoveHighlights();
+        Debug.Log("captured piece clicked");
         controller.OnCapturedPieceClicked(piece);
+
     }
 
-    public void ShowGameOver(bool isWin)
+    public void ShowGameOver()
     {
-        if (isWin)
+        if (!model.isEnd) return;
+        if (model.isWin)
         {
             winPanel.SetActive(true);
             if (model.GetPlayerId() == 1)
@@ -371,6 +373,7 @@ public class ShogiView : MonoBehaviour
 
     public void OnGameOverButtonClicked()
     {
+        ShowAlert("go to lobby");
         SceneManager.LoadScene("GameSelectScene");
     }
 
@@ -395,7 +398,10 @@ public class ShogiView : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        gameOverButton.onClick.AddListener(OnGameOverButtonClicked);
+        foreach (var btn in gameOverButtons)
+        {
+            btn.onClick.AddListener(OnGameOverButtonClicked);
+        }
         winPanel.SetActive(false);
         losePanel.SetActive(false);
     }

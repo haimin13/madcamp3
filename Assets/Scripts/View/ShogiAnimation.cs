@@ -105,16 +105,44 @@ public class ShogiAnimation : MonoBehaviour
 
         rect.anchoredPosition = end;
 
-        duration = 0.3f;
-        elapsed = 0f;
-        // while (elapsed < duration)
-        // {
-        //     GameObject chack = Instantiate(chackPrefab)
-        // }
+        Vector2 pos = view.GetCellPos(to[0], to[1]);
+        Vector2 startSize = rect.sizeDelta; // 현재 piece 사이즈
+
+        yield return StartCoroutine(PlayScaleFadeEffect(chackPrefab, view.boardRoot, pos, startSize, 0.3f));
+
 
         yield return new WaitForSeconds(trailDuration);
 
         AfterAnimation();
+    }
+    public IEnumerator PlayScaleFadeEffect(GameObject effectPrefab, Transform parent, Vector2 anchoredPos, Vector2 startSize, float duration)
+    {
+        GameObject effect = Instantiate(effectPrefab, parent);
+        RectTransform rt = effect.GetComponent<RectTransform>();
+        Image img = effect.GetComponent<Image>();
+
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = startSize;
+        Color startColor = img.color;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+
+            // 크기 점점 키우기 (0 ~ 1.5배 예)
+            rt.sizeDelta = Vector2.Lerp(startSize, startSize * 1.5f, t);
+
+            // 알파는 점점 0으로 줄이기
+            img.color = Color.Lerp(startColor, new Color(startColor.r, startColor.g, startColor.b, 0f), t);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // 끝났을 때 확실히 0크기, 투명으로 만들고 오브젝트 제거
+        img.color = new Color(startColor.r, startColor.g, startColor.b, 0f);
+        Destroy(effect);
     }
     
     public IEnumerator AnimateCapture(List<int> from, List<int> to)
@@ -143,7 +171,7 @@ public class ShogiAnimation : MonoBehaviour
         {
             float t = easeStart.Evaluate(elapsed / duration);
             rect.anchoredPosition = Vector2.Lerp(start, stopover, t);
-            rect.localScale = Vector3.Lerp(originalScale, enlargedScale, t); 
+            rect.localScale = Vector3.Lerp(originalScale, enlargedScale, t);
 
             elapsed += Time.deltaTime;
             yield return null;

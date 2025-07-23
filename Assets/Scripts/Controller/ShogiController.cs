@@ -245,7 +245,7 @@ public class ShogiController : MonoBehaviour
             view.ShowAlert("Not your turn!");
             return;
         }
-        if (piece.owner == model.GetPlayerId())
+        if (piece.owner != model.GetPlayerId())
         {
             view.ShowAlert("Not your piece!");
             view.RemoveHighlights();

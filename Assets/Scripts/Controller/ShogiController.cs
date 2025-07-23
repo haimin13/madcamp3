@@ -395,7 +395,11 @@ public class ShogiController : MonoBehaviour
                             view.ShowBoard();
                         }
                     }
-                    else Debug.Log("상대 말에 변화안함!");
+                    else
+                    {
+                        Debug.Log("상대 말에 변화안함!");
+                        view.ShowBoard();
+                    }
                     if (!res.is_end)
                         ChangeTurn(true);
                     

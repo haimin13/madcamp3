@@ -150,7 +150,7 @@ public class ShogiView : MonoBehaviour
             }
     }
 
-    
+
     public void ShowBoard()
     {
         if (!boardCellsInitialized)
@@ -181,6 +181,7 @@ public class ShogiView : MonoBehaviour
         RemoveHighlights();
         SetupCapturedPanels();
         ShowCapturedPieces();
+        ShowGameOver();
     }
 
     public Vector2 GetCellPos(int x, int y)

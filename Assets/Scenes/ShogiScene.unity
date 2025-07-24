@@ -547,7 +547,7 @@ MonoBehaviour:
   myTurn: 1
   isWin: 0
   isEnd: 0
-  timeLimit: 10
+  timeLimit: 90
   timeLeft: 0
   selectedPosition: 
 --- !u!4 &438091348

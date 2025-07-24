@@ -156,10 +156,10 @@ public class ShogiController : MonoBehaviour
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
             {
+                SavePrevBoard();
                 if (res.is_end)
                     GameOver(res.winner);
 
-                SavePrevBoard();
                 Piece sourcePiece = model.board[fromX, fromY];
                 Piece movedPiece = new Piece
                 {
@@ -211,10 +211,10 @@ public class ShogiController : MonoBehaviour
             var res = JsonConvert.DeserializeObject<MoveResponse>(response);
             if (res.result)
             {
+                SavePrevBoard();
                 if (res.is_end)
                     GameOver(res.winner);
 
-                SavePrevBoard();
                 Piece droppedPiece = model.selectedCapturedPiece;
                 Piece newPiece = new Piece
                 {
@@ -289,16 +289,6 @@ public class ShogiController : MonoBehaviour
         }, (error) =>
         {
             Debug.Log(error);
-            // JUST FOR TEST
-            // var moves = new List<List<int>>
-            //     {
-            //         new() {0,1},
-            //         new() {2,1},
-            //         new() {0,2},
-            //         new() {2,2}
-            //     };
-            // model.movablePositions = moves;
-            // view.HighlightMovableCells(moves);
         }));
     }
     // 폴링 루프: 1초마다 내 턴인지 확인 (내 턴이 오면 코루틴 종료, 입력 허용)
@@ -326,83 +316,93 @@ public class ShogiController : MonoBehaviour
 
             if (res != null && res.result)
             {
-                if (res.turn)
+                SavePrevBoard();
+                if (res.is_end)
                 {
-                    if (res.is_end)
-                        GameOver(res.winner);
-
-                    if (res.op_position != null && res.op_position.to != null)
+                    GameOver(res.winner);
+                    Debug.Log($"isEnd1: {model.isEnd}");
+                    Debug.Log($"isWin1: {model.isWin}");
+                }
+                if (res.turn)
                     {
-                        SavePrevBoard();
-                        Debug.Log("상대 말에 변화있음!");
-                        int toX = res.op_position.to[0];
-                        int toY = res.op_position.to[1];
-
-                        if (res.op_position.from != null) // 상대 말 이동
+                        if (res.op_position != null && res.op_position.to != null)
                         {
-                            Debug.Log("상대 말 이동함!");
-                            int fromX = res.op_position.from[0];
-                            int fromY = res.op_position.from[1];
-                            Piece toPiece = model.board[toX, toY];
+                            Debug.Log("상대 말에 변화있음!");
+                            int toX = res.op_position.to[0];
+                            int toY = res.op_position.to[1];
 
-                            if (toPiece.pieceType != PieceType.Empty && toPiece.owner == model.GetPlayerId())
+                            if (res.op_position.from != null) // 상대 말 이동
                             {
-                                Piece capturePiece = new Piece
+                                Debug.Log("상대 말 이동함!");
+                                int fromX = res.op_position.from[0];
+                                int fromY = res.op_position.from[1];
+                                Piece toPiece = model.board[toX, toY];
+
+                                if (toPiece.pieceType != PieceType.Empty && toPiece.owner == model.GetPlayerId())
                                 {
-                                    pieceType = (toPiece.pieceType == PieceType.Hoo) ? PieceType.Ja : toPiece.pieceType,
-                                    owner = model.GetAdversaryId(),
+                                    Piece capturePiece = new Piece
+                                    {
+                                        pieceType = (toPiece.pieceType == PieceType.Hoo) ? PieceType.Ja : toPiece.pieceType,
+                                        owner = model.GetAdversaryId(),
+                                        stayedTurns = 0
+                                    };
+
+                                    model.playersInfo[model.GetAdversaryId()].capturedPieces.Add(capturePiece);
+                                }
+
+                                Piece sourcePiece = model.board[fromX, fromY];
+                                if (sourcePiece.pieceType == PieceType.Ja && (
+                                    (model.GetAdversaryId() == 1 && toY == 3) || (model.GetAdversaryId() == 2 && toY == 0)))
+                                    sourcePiece.pieceType = PieceType.Hoo;
+
+                                Piece movedPiece = new Piece
+                                {
+                                    pieceType = sourcePiece.pieceType,
+                                    owner = sourcePiece.owner,
                                     stayedTurns = 0
                                 };
 
-                                model.playersInfo[model.GetAdversaryId()].capturedPieces.Add(capturePiece);
+                                model.board[toX, toY] = movedPiece;
+                                model.board[fromX, fromY] = model.CreateEmptyPiece();
+                                DebugBoard();
+                                view.ShowBoard();
                             }
-
-                            Piece sourcePiece = model.board[fromX, fromY];
-                            if (sourcePiece.pieceType == PieceType.Ja && (
-                                (model.GetAdversaryId() == 1 && toY == 3) || (model.GetAdversaryId() == 2 && toY == 0)))
-                                sourcePiece.pieceType = PieceType.Hoo;
-
-                            Piece movedPiece = new Piece
+                            else // 상대 말 드롭
                             {
-                                pieceType = sourcePiece.pieceType,
-                                owner = sourcePiece.owner,
-                                stayedTurns = 0
-                            };
+                                Debug.Log("상대 말 드랍함!");
+                                PieceType droppedType = (PieceType)System.Enum.Parse(typeof(PieceType), res.op_piece);
 
-                            model.board[toX, toY] = movedPiece;
-                            model.board[fromX, fromY] = model.CreateEmptyPiece();
-                            DebugBoard();
-                            view.ShowBoard();
+                                Piece newPiece = new Piece
+                                {
+                                    pieceType = droppedType,
+                                    owner = model.GetAdversaryId(),
+                                    stayedTurns = 0
+                                };
+                                model.board[toX, toY] = newPiece;
+                                var droppedPiece = model.playersInfo[model.GetAdversaryId()].capturedPieces
+                                    .Where(piece => piece.pieceType == droppedType)
+                                    .FirstOrDefault();
+
+                                model.playersInfo[model.GetAdversaryId()].capturedPieces.Remove(droppedPiece);
+                                DebugBoard();
+                                view.ShowBoard();
+                            }
                         }
-                        else // 상대 말 드롭
+                        else // 상대 timeout
                         {
-                            Debug.Log("상대 말 드랍함!");
-                            PieceType droppedType = (PieceType)System.Enum.Parse(typeof(PieceType), res.op_piece);
-
-                            Piece newPiece = new Piece
-                            {
-                                pieceType = droppedType,
-                                owner = model.GetAdversaryId(),
-                                stayedTurns = 0
-                            };
-                            model.board[toX, toY] = newPiece;
-                            var droppedPiece = model.playersInfo[model.GetAdversaryId()].capturedPieces
-                                .Where(piece => piece.pieceType == droppedType)
-                                .FirstOrDefault();
-
-                            model.playersInfo[model.GetAdversaryId()].capturedPieces.Remove(droppedPiece);
-                            DebugBoard();
+                            Debug.Log("상대 말에 변화안함!");
                             view.ShowBoard();
                         }
+                        if (!res.is_end)
+                            ChangeTurn(true);
+
+                        yield break;
                     }
-                    else
-                    {
-                        Debug.Log("상대 말에 변화안함!");
-                        view.ShowBoard();
-                    }
-                    if (!res.is_end)
-                        ChangeTurn(true);
-                    
+                if (res.is_end)
+                {
+                    Debug.Log($"isEnd2: {model.isEnd}");
+                    Debug.Log($"isWin2: {model.isWin}");
+                    view.ShowBoard();
                     yield break;
                 }
             }
@@ -439,7 +439,10 @@ public class ShogiController : MonoBehaviour
         }
         else
         {
+            if (turnPollingCoroutine != null) {
+                StopCoroutine(turnPollingCoroutine);
             turnPollingCoroutine = null;
+        }
         }
     }
 
@@ -462,9 +465,20 @@ public class ShogiController : MonoBehaviour
         {
             var res = JsonConvert.DeserializeObject<TimeOutResponse>(response);
             if (res.result)
+                SavePrevBoard();
                 if (res.is_end)
+                {
+                    Debug.Log($"isEnd3: {model.isEnd}");
+                    Debug.Log($"isWin3: {model.isWin}");
                     GameOver(res.winner);
                     view.ShowBoard();
+                }
+                if (turnPollingCoroutine != null)
+                {
+                    StopCoroutine(turnPollingCoroutine);
+                    turnPollingCoroutine = null;
+                }
+                    
         }, (error)=>
         {
             Debug.Log(error);

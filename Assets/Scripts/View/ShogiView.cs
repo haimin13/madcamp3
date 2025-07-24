@@ -153,12 +153,14 @@ public class ShogiView : MonoBehaviour
 
     public void ShowBoard()
     {
+        Debug.Log("view.Showboard 진입");
         if (!boardCellsInitialized)
             InitBoardCells();
         // animation 먼저 보여주기
         var moveDelta = anim.GetMoveDelta(model.prevBoard, model.board);
         if (moveDelta.HasValue)
         {
+            Debug.Log("보드 변화 있음");
             var (from, to, moveType) = moveDelta.Value;
             if (moveType == "move")
             {
@@ -343,6 +345,8 @@ public class ShogiView : MonoBehaviour
 
     public void ShowGameOver()
     {
+        Debug.Log("entered view.ShowGameOver");
+        Debug.Log($"model.isEnd: {model.isEnd}");
         if (!model.isEnd) return;
         if (model.isWin)
         {

@@ -53,6 +53,7 @@ public class ShogiAnimation : MonoBehaviour
 
     public void AfterAnimation()
     {
+        Debug.Log("AfterAnimation");
         view.ShowPieces();
         view.RemoveHighlights();
         view.SetupCapturedPanels();
@@ -62,6 +63,7 @@ public class ShogiAnimation : MonoBehaviour
 
     public IEnumerator AnimateMove(List<int> from, List<int> to)
     {
+        Debug.Log("AnimateMove 진입");
         int fromX = from[0], fromY = from[1], toX = to[0], toY = to[1];
 
         GameObject movingPiece = view.pieceObjects[fromX, fromY];
@@ -156,6 +158,7 @@ public class ShogiAnimation : MonoBehaviour
     
     public IEnumerator AnimateCapture(List<int> from, List<int> to)
     {
+        Debug.Log("AnimateCapture 진입");
         int fromX = from[0], fromY = from[1], toX = to[0], toY = to[1];
 
         GameObject movingPiece = view.pieceObjects[fromX, fromY];
@@ -232,6 +235,7 @@ public class ShogiAnimation : MonoBehaviour
     }
     public IEnumerator AnimateDrop(List<int> to, Piece piece, int playerId)
     {
+        Debug.Log("AnimateDrop 진입");
         int toX = to[0], toY = to[1];
 
         // Creating new pieceObject

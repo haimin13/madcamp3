@@ -32,7 +32,7 @@ public class ShogiModel : MonoBehaviour
     public bool myTurn;
     public bool isWin = false;
     public bool isEnd = false;
-    public int timeLimit = 90;
+    public int timeLimit = 10;
     public int timeLeft;
     public List<int> selectedPosition;
     public Piece selectedCapturedPiece;
